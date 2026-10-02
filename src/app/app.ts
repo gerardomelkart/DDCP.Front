@@ -1,4 +1,4 @@
-import { Component, HostListener, signal } from '@angular/core';
+import { afterNextRender, Component, HostListener, Injector, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -27,7 +27,7 @@ export class App {
     consultaEntidad = 0;
     archivo: File | null = null;
     nuevo = { usuario: '', nombre: '', password: '', rol: 'ENLACE_ESTATAL', esNacional: false, idEntidad: 0 };
-    constructor(private api: Api) { if (this.sesion()) void this.inicializar(); }
+    constructor(private api: Api, private injector: Injector) { if (this.sesion()) void this.inicializar(); }
     private recuperar(): Sesion | null {
         try { const data = JSON.parse(sessionStorage.getItem('ddcp.sesion') || 'null') as Sesion | null; return data?.token && Date.parse(data.expira) > Date.now() ? data : null; }
         catch { return null; }
@@ -86,13 +86,43 @@ export class App {
             data.append('mes', String(this.mes));
             data.append('archivo', this.archivo);
             this.previa.set(await this.api.post<Previa>('ddcp/cargas/validar', data, this.token()));
+            this.mostrarVistaPrevia();
         });
     }
-    async confirmar() {
+    private mostrarVistaPrevia()
+    {
+        const idCarga = this.previa()?.idCarga;
+        afterNextRender(() => {
+            if (this.pagina !== 'carga' || this.previa()?.idCarga !== idCarga)
+            {
+                return;
+            }
+            const panel = document.querySelector<HTMLElement>('.preview');
+            if (!panel)
+            {
+                return;
+            }
+            const encabezado = document.querySelector<HTMLElement>('.topbar');
+            const alturaEncabezado = encabezado?.getBoundingClientRect().height ?? 0;
+            const top = Math.max(0, window.scrollY + panel.getBoundingClientRect().top - alturaEncabezado - 16);
+            const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            window.scrollTo({ top, behavior: reducirMovimiento ? 'auto' : 'smooth' });
+        }, { injector: this.injector });
+    }
+    async confirmar()
+    {
         await this.ejecutar(async () => {
-            const previa = this.previa(); if (!previa) return;
+            const previa = this.previa();
+            if (!previa)
+            {
+                return;
+            }
             const response = await this.api.post<{ mensaje: string }>(`ddcp/cargas/${previa.idCarga}/confirmar`, {}, this.token());
-            this.previa.set(null); this.consulta.set(null); this.mensaje.set(response.mensaje);
+            this.archivo = null;
+            this.arrastrando.set(false);
+            this.previa.set(null);
+            this.consulta.set(null);
+            this.mensaje.set(response.mensaje);
         });
     }
     async cancelar() {
