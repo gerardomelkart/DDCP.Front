@@ -25,7 +25,7 @@
     <div class="app-layout">
         @if (menuAbierto()) { <button class="menu-backdrop" aria-label="Cerrar menú" (click)="menuAbierto.set(false)"></button> }
         <aside id="ddcp-navigation" class="sidebar" [class.sidebar-open]="menuAbierto()">
-            <div class="user-card"><div class="user-avatar"><svg class="icon"><use href="#i-user" /></svg></div><div><strong>{{ sesion()!.usuario.nombre }}</strong><span>{{ rolNombre(sesion()!.usuario.rol) }}</span></div><div class="scope"><span>Alcance</span><strong>{{ sesion()!.usuario.esNacional ? 'Nacional' : nombreEntidad(sesion()!.usuario.idEntidad) }}</strong></div></div>
+            <div class="user-card"><div><strong>{{ sesion()!.usuario.nombre }}</strong><span>{{ rolNombre(sesion()!.usuario.rol) }}</span></div><div class="scope"><span>Alcance</span><strong>{{ sesion()!.usuario.esNacional ? 'Nacional' : nombreEntidad(sesion()!.usuario.idEntidad) }}</strong></div></div>
             <p class="menu-heading">INFORMACIÓN</p>
             <nav aria-label="Secciones"><button [class.active]="pagina === 'consulta'" [attr.aria-current]="pagina === 'consulta' ? 'page' : null" (click)="ir('consulta')"><svg class="icon"><use href="#i-search" /></svg>Consulta de datos</button>
                 @if (puedeCargar()) { <button [class.active]="pagina === 'carga'" [attr.aria-current]="pagina === 'carga' ? 'page' : null" (click)="ir('carga')"><svg class="icon"><use href="#i-upload" /></svg>Carga mensual</button> }
@@ -34,7 +34,7 @@
             <div class="sidebar-bottom"><span>DDCP · 0.2</span><button class="secondary" (click)="salir()" [disabled]="ocupado()">Cerrar sesión</button></div>
         </aside>
         <main class="workspace">
-            <div class="page-heading"><div><span class="eyebrow">DDCP / {{ pagina === 'consulta' ? 'Consulta' : pagina === 'carga' ? 'Carga mensual' : 'Usuarios' }}</span><h1>{{ pagina === 'consulta' ? 'Consulta de información' : pagina === 'carga' ? 'Carga de información' : 'Administración de usuarios' }}</h1><p>{{ pagina === 'consulta' ? 'Revisa la información confirmada por periodo y entidad.' : pagina === 'carga' ? 'Envía el reporte mensual y revisa sus datos antes de confirmar.' : 'Crea usuarios y asigna su rol y alcance de consulta.' }}</p></div><span class="scope-badge">{{ sesion()!.usuario.esNacional ? 'Cobertura nacional' : nombreEntidad(sesion()!.usuario.idEntidad) }}</span></div>
+            <div class="page-heading"><div><span class="eyebrow">DDCP / {{ pagina === 'consulta' ? 'Consulta' : pagina === 'carga' ? 'Carga mensual' : 'Usuarios' }}</span><h1>{{ pagina === 'consulta' ? 'Consulta de información' : pagina === 'carga' ? 'Carga de información' : 'Administración de usuarios' }}</h1><p>{{ pagina === 'consulta' ? 'Revisa la información confirmada por periodo y entidad.' : pagina === 'carga' ? 'Envía el reporte mensual y revisa sus datos antes de confirmar.' : 'Gestiona cuentas, roles, estado y alcance de DDCP.' }}</p></div><span class="scope-badge">{{ sesion()!.usuario.esNacional ? 'Cobertura nacional' : nombreEntidad(sesion()!.usuario.idEntidad) }}</span></div>
             @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
             @if (mensaje()) { <div class="alert success" role="status">{{ mensaje() }}</div> }
             @if (pagina === 'consulta') {
@@ -69,16 +69,89 @@
                 }
             }
             @if (pagina === 'usuarios') {
-                <section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-user" /></svg>Crear usuario</div><form class="panel-body" (ngSubmit)="crearUsuario()"><fieldset [disabled]="ocupado()"><div class="user-fields">
-                    <label>Usuario<input name="nuevoUsuario" [(ngModel)]="nuevo.usuario" required maxlength="80" autocomplete="off"></label><label>Nombre completo<input name="nuevoNombre" [(ngModel)]="nuevo.nombre" required maxlength="160"></label><label>Contraseña inicial<input name="nuevoPassword" type="password" [(ngModel)]="nuevo.password" required minlength="8" autocomplete="new-password"></label>
-                    <label>Rol<select name="nuevoRol" [(ngModel)]="nuevo.rol" (ngModelChange)="cambiarRol()"><option value="SUPER_USUARIO">Super usuario</option><option value="ENLACE_ESTATAL">Enlace</option><option value="CONSULTA">Consulta</option></select></label><label>Alcance<select name="nuevoAlcance" [(ngModel)]="nuevo.esNacional" [disabled]="nuevo.rol === 'SUPER_USUARIO'"><option [ngValue]="true">Nacional</option><option [ngValue]="false">Por entidad</option></select></label>
-                    @if (!nuevo.esNacional) { <label>Entidad<select name="nuevaEntidad" [(ngModel)]="nuevo.idEntidad" required><option [ngValue]="0">Seleccionar</option>@for (e of entidades(); track e.idEntidad) { <option [ngValue]="e.idEntidad">{{ e.nombreEntidad }}</option> }</select></label> }
-                </div><div class="actions"><button type="submit">Crear usuario</button></div></fieldset></form></section>
-                <section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-user" /></svg>Usuarios registrados</div><div class="table-scroll"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Alcance</th><th>Entidad</th></tr></thead><tbody>@for (u of usuarios(); track u.idUsuario) { <tr><td>{{ u.usuario }}</td><td>{{ u.nombre }}</td><td>{{ rolNombre(u.rol) }}</td><td>{{ u.esNacional ? 'Nacional' : 'Por entidad' }}</td><td>{{ u.esNacional ? 'Todas' : nombreEntidad(u.idEntidad) }}</td></tr> }</tbody></table></div></section>
+                <div class="admin-page">
+                    <div class="admin-header">
+                        
+                        <button type="button" (click)="abrirUsuario()" [disabled]="ocupado()"><svg class="icon"><use href="#i-user" /></svg>Nuevo usuario</button>
+                    </div>
+                    <div class="admin-kpis">
+                        <div class="kpi-card"><div class="kpi-value">{{ usuarios().length }}</div><div class="kpi-label">Usuarios registrados</div></div>
+                        <div class="kpi-card kpi-ok"><div class="kpi-value">{{ usuariosActivos() }}</div><div class="kpi-label">Activos</div></div>
+                        <div class="kpi-card kpi-warn"><div class="kpi-value">{{ usuarios().length - usuariosActivos() }}</div><div class="kpi-label">Inactivos</div></div>
+                    </div>
+                    <section class="siiid-card usuarios-card">
+                        <div class="siiid-card-header usuarios-card-header">
+                            <strong>Usuarios de DDCP</strong>
+                            <div class="usuarios-tools">
+                                <button class="secondary" type="button" (click)="exportarUsuarios()" [disabled]="ocupado()">Excel</button>
+                                <label class="estado-filtro">Estado<select aria-label="Filtrar usuarios por estado" [(ngModel)]="filtroEstado" (ngModelChange)="paginaUsuarios = 1"><option value="activos">Activos</option><option value="inactivos">Inactivos</option><option value="todos">Ver todos</option></select></label>
+                                <div class="buscador"><svg class="icon"><use href="#i-search" /></svg><input type="search" aria-label="Buscar usuarios" placeholder="Buscar por nombre, usuario, rol o entidad…" [(ngModel)]="busquedaUsuarios" (ngModelChange)="paginaUsuarios = 1"></div>
+                            </div>
+                        </div>
+                        <div class="table-scroll">
+                            <table class="usuarios-table">
+                                <thead><tr>
+                                    <th><button class="sort-header" (click)="ordenarUsuarios('nombre')">Nombre{{ marcaOrden('nombre') }}</button></th>
+                                    <th><button class="sort-header" (click)="ordenarUsuarios('usuario')">Usuario{{ marcaOrden('usuario') }}</button></th>
+                                    <th><button class="sort-header" (click)="ordenarUsuarios('rol')">Rol{{ marcaOrden('rol') }}</button></th>
+                                    <th><button class="sort-header" (click)="ordenarUsuarios('entidad')">Entidad / alcance{{ marcaOrden('entidad') }}</button></th>
+                                    <th><button class="sort-header" (click)="ordenarUsuarios('estado')">Estado{{ marcaOrden('estado') }}</button></th>
+                                    <th>Acciones</th>
+                                </tr></thead>
+                                <tbody>
+                                    @for (u of usuariosPaginados(); track u.idUsuario) {
+                                        <tr>
+                                            <td><div class="usuario-nombre">{{ u.nombre }}</div></td><td>{{ u.usuario }}</td>
+                                            <td><span class="rol-badge">{{ rolNombre(u.rol) }}</span></td><td>{{ u.esNacional ? 'Nacional' : nombreEntidad(u.idEntidad) }}</td>
+                                            <td><span class="estado-badge" [class.estado-activo]="u.habilitado !== false" [class.estado-inactivo]="u.habilitado === false">{{ u.habilitado !== false ? 'ACTIVO' : 'INACTIVO' }}</span></td>
+                                            <td><div class="acciones">
+                                                <button type="button" class="btn-icon btn-edit" [disabled]="ocupado() || u.habilitado === false" [attr.aria-label]="'Editar ' + u.usuario" [title]="u.habilitado === false ? 'Reactive el usuario antes de editar' : 'Editar usuario'" (click)="abrirUsuario(u)"><svg class="icon" viewBox="0 0 24 24"><path d="m15 5 4 4M4 20l4-1L20 7a3 3 0 0 0-4-4L4 15z" /></svg></button>
+                                                <button type="button" class="btn-icon btn-toggle" [disabled]="ocupado() || u.idUsuario === sesion()!.usuario.idUsuario" [attr.aria-label]="(u.habilitado === false ? 'Activar ' : 'Deshabilitar ') + u.usuario" [title]="u.idUsuario === sesion()!.usuario.idUsuario ? 'No puede deshabilitar su propia cuenta' : u.habilitado === false ? 'Activar usuario' : 'Deshabilitar usuario'" (click)="pedirEstado(u)"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="6" /><circle [attr.cx]="u.habilitado === false ? 8 : 16" cy="12" r="3" /></svg></button>
+                                            </div></td>
+                                        </tr>
+                                    } @empty {
+                                        <tr><td colspan="6" class="usuarios-mensaje">No se encontraron usuarios.</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination-row"><span>Mostrando {{ usuariosPaginados().length }} de {{ usuariosFiltrados().length }} usuarios</span><div class="pagination-actions"><button class="secondary" (click)="paginaUsuarios = paginaUsuarios - 1" [disabled]="paginaUsuarios <= 1">Anterior</button><span>{{ paginaUsuarios }} / {{ totalPaginasUsuarios() }}</span><button class="secondary" (click)="paginaUsuarios = paginaUsuarios + 1" [disabled]="paginaUsuarios >= totalPaginasUsuarios()">Siguiente</button></div></div>
+                    </section>
+                </div>
+                @if (modalUsuario) {
+                    <div class="drawer-backdrop" (click)="cerrarUsuario()"></div>
+                    <aside class="usuario-drawer" role="dialog" aria-modal="true" aria-labelledby="titulo-usuario">
+                        <div class="drawer-header"><div><h2 id="titulo-usuario">{{ usuarioEditar ? 'Editar usuario' : 'Nuevo usuario' }}</h2><p>Datos generales, rol y alcance de DDCP.</p></div><button type="button" class="drawer-close" aria-label="Cerrar formulario" (click)="cerrarUsuario()" [disabled]="ocupado()">×</button></div>
+                        <form class="drawer-form" (ngSubmit)="guardarUsuario()">
+                            <div class="drawer-body">
+                                @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
+                                <fieldset [disabled]="ocupado()"><div class="form-grid">
+                                    <label class="span-2" for="usuario-nombre">Nombre completo <span class="required">*</span><input id="usuario-nombre" name="nombre" [(ngModel)]="nuevo.nombre" required maxlength="160" autocomplete="name"></label>
+                                    <label>Usuario <span class="required">*</span><input name="usuario" [(ngModel)]="nuevo.usuario" required maxlength="80" autocomplete="off"></label>
+                                    <label>Rol <span class="required">*</span><select name="rol" [(ngModel)]="nuevo.rol" (ngModelChange)="cambiarRol()" [disabled]="usuarioEditar === sesion()!.usuario.idUsuario"><option value="SUPER_USUARIO">Super usuario</option><option value="ENLACE_ESTATAL">Enlace</option><option value="CONSULTA">Consulta</option></select></label>
+                                    <label>Alcance <span class="required">*</span><select name="alcance" [(ngModel)]="nuevo.esNacional" [disabled]="nuevo.rol === 'SUPER_USUARIO'"><option [ngValue]="true">Nacional — todas las entidades</option><option [ngValue]="false">Por entidad</option></select></label>
+                                    <label>Entidad<select name="entidad" [(ngModel)]="nuevo.idEntidad" [disabled]="nuevo.esNacional" [required]="!nuevo.esNacional"><option [ngValue]="0">Seleccionar entidad</option>@for (e of entidades(); track e.idEntidad) { <option [ngValue]="e.idEntidad">{{ e.nombreEntidad }}</option> }</select></label>
+                                    <label class="span-2">{{ usuarioEditar ? 'Nueva contraseña' : 'Contraseña inicial *' }}<input name="password" type="password" [(ngModel)]="nuevo.password" [required]="!usuarioEditar" minlength="8" autocomplete="new-password"><small>{{ usuarioEditar ? 'Déjala vacía para conservar la contraseña actual.' : 'Al menos 8 caracteres.' }}</small></label>
+                                </div><div class="permisos-panel"><strong>Permisos de DDCP</strong><p>{{ nuevo.rol === 'CONSULTA' ? 'Consulta de información; sin carga de archivos.' : nuevo.rol === 'SUPER_USUARIO' ? 'Administración de usuarios, carga y consulta nacional.' : 'Carga y consulta dentro del alcance asignado.' }}</p></div></fieldset>
+                            </div>
+                            <div class="drawer-actions"><button type="button" class="secondary" (click)="cerrarUsuario()" [disabled]="ocupado()">Cancelar</button><button type="submit" [disabled]="ocupado() || !formularioUsuarioValido()">Guardar usuario</button></div>
+                        </form>
+                    </aside>
+                }
+                @if (estadoPendiente; as u) {
+                    <div class="drawer-backdrop" (click)="cerrarUsuario()"></div>
+                    <section class="estado-dialog" role="dialog" aria-modal="true" aria-labelledby="titulo-estado">
+                        <h2 id="titulo-estado">{{ u.habilitado === false ? 'Activar usuario' : 'Deshabilitar usuario' }}</h2><p>¿Deseas {{ u.habilitado === false ? 'activar' : 'deshabilitar' }} la cuenta de <strong>{{ u.nombre }}</strong> ({{ u.usuario }})?</p>
+                        @if (u.habilitado !== false) { <p>La cuenta dejará de tener acceso al sistema.</p> }
+                        @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
+                        <div class="actions"><button class="secondary" (click)="cerrarUsuario()" [disabled]="ocupado()">Cancelar</button><button (click)="confirmarEstado()" [disabled]="ocupado()">{{ u.habilitado === false ? 'Activar' : 'Deshabilitar' }}</button></div>
+                    </section>
+                }
             }
             <footer class="page-footer">DDCP · Puesta de dispositivos a disposición</footer>
         </main>
     </div>
     @if (ocupado()) { <div class="processing-overlay" role="status" aria-live="polite"><div><span class="spinner"></span><strong>Procesando información…</strong><span>Espera un momento, por favor.</span></div></div> }
 }
+
 

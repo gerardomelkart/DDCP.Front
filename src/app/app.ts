@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -55,7 +55,7 @@ export class App {
         });
     }
     async inicializar() { await this.ejecutar(async () => this.entidades.set(await this.api.get<Entidad[]>('ddcp/entidades', this.token()))); }
-    salir() { sessionStorage.removeItem('ddcp.sesion'); this.sesion.set(null); this.previa.set(null); this.consulta.set(null); this.entidades.set([]); this.usuarios.set([]); this.archivo = null; this.pagina = 'consulta'; this.menuAbierto.set(false); this.arrastrando.set(false); }
+    salir() { sessionStorage.removeItem('ddcp.sesion'); this.sesion.set(null); this.previa.set(null); this.consulta.set(null); this.entidades.set([]); this.usuarios.set([]); this.archivo = null; this.pagina = 'consulta'; this.menuAbierto.set(false); this.arrastrando.set(false); this.modalUsuario = false; this.estadoPendiente = null; this.nuevo.password = ''; }
     puedeCargar() { return this.sesion()?.usuario.rol !== 'CONSULTA'; }
     seleccionarArchivo(event: Event) { const input = event.target as HTMLInputElement; if (input.files?.length) this.recibirArchivo(Array.from(input.files)); input.value = ''; }
     private recibirArchivo(files: File[]) {
@@ -125,14 +125,180 @@ export class App {
     totalPreviaDispositivos() { return (this.previa()?.filas || []).reduce((sum, fila) => sum + BigInt(fila.dispositivos), 0n).toString(); }
     totalPreviaPersonas() { return (this.previa()?.filas || []).reduce((sum, fila) => sum + fila.personas, 0); }
     async verUsuarios() { this.ir('usuarios'); await this.ejecutar(async () => this.usuarios.set(await this.api.get<Usuario[]>('usuarios', this.token()))); }
-    async crearUsuario() {
+    modalUsuario = false;
+    usuarioEditar: number | null = null;
+    estadoPendiente: Usuario | null = null;
+    busquedaUsuarios = '';
+    filtroEstado = 'activos';
+    paginaUsuarios = 1;
+    ordenUsuarios = 'nombre';
+    ordenAscendente = true;
+    private focoAnterior: HTMLElement | null = null;
+    usuariosActivos()
+    {
+        return this.usuarios().filter(u => u.habilitado !== false).length;
+    }
+    usuariosFiltrados()
+    {
+        const texto = this.busquedaUsuarios.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const lista = this.usuarios().filter(u => {
+            const estado = u.habilitado !== false;
+            const valor = `${u.nombre} ${u.usuario} ${this.rolNombre(u.rol)} ${u.esNacional ? 'Nacional' : this.nombreEntidad(u.idEntidad)}`;
+            const coincide = valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(texto);
+            return coincide && (this.filtroEstado === 'todos' || (this.filtroEstado === 'activos' ? estado : !estado));
+        });
+        const valorOrden = (u: Usuario) => {
+            switch (this.ordenUsuarios)
+            {
+                case 'usuario': return u.usuario;
+                case 'rol': return this.rolNombre(u.rol);
+                case 'entidad': return u.esNacional ? 'Nacional' : this.nombreEntidad(u.idEntidad);
+                case 'estado': return u.habilitado !== false ? 'Activo' : 'Inactivo';
+                default: return u.nombre;
+            }
+        };
+        return lista.sort((a, b) => valorOrden(a).localeCompare(valorOrden(b), 'es', { sensitivity: 'base' }) * (this.ordenAscendente ? 1 : -1));
+    }
+    totalPaginasUsuarios()
+    {
+        return Math.max(1, Math.ceil(this.usuariosFiltrados().length / 10));
+    }
+    usuariosPaginados()
+    {
+        const pagina = Math.min(this.paginaUsuarios, this.totalPaginasUsuarios());
+        return this.usuariosFiltrados().slice((pagina - 1) * 10, pagina * 10);
+    }
+    ordenarUsuarios(campo: string)
+    {
+        this.ordenAscendente = this.ordenUsuarios === campo ? !this.ordenAscendente : true;
+        this.ordenUsuarios = campo;
+        this.paginaUsuarios = 1;
+    }
+    marcaOrden(campo: string)
+    {
+        return this.ordenUsuarios === campo ? (this.ordenAscendente ? ' ↑' : ' ↓') : '';
+    }
+    abrirUsuario(usuario?: Usuario)
+    {
+        if (this.ocupado() || usuario?.habilitado === false)
+        {
+            return;
+        }
+        this.error.set('');
+        this.mensaje.set('');
+        this.usuarioEditar = usuario?.idUsuario ?? null;
+        this.nuevo = usuario ? { usuario: usuario.usuario, nombre: usuario.nombre, password: '', rol: usuario.rol, esNacional: usuario.esNacional, idEntidad: usuario.idEntidad ?? 0 } : { usuario: '', nombre: '', password: '', rol: 'ENLACE_ESTATAL', esNacional: false, idEntidad: 0 };
+        this.focoAnterior = document.activeElement as HTMLElement;
+        this.modalUsuario = true;
+        setTimeout(() => document.querySelector<HTMLInputElement>('#usuario-nombre')?.focus());
+    }
+    cerrarUsuario()
+    {
+        if (this.ocupado())
+        {
+            return;
+        }
+        this.modalUsuario = false;
+        this.estadoPendiente = null;
+        this.nuevo.password = '';
+        this.focoAnterior?.focus();
+    }
+    @HostListener('document:keydown', ['$event'])
+    tecladoDialogo(event: KeyboardEvent)
+    {
+        if (!this.modalUsuario && !this.estadoPendiente)
+        {
+            return;
+        }
+        if (event.key === 'Escape')
+        {
+            this.cerrarUsuario();
+        }
+        if (event.key === 'Tab')
+        {
+            const dialogo = document.querySelector(this.modalUsuario ? '.usuario-drawer' : '.estado-dialog');
+            const campos = Array.from(dialogo?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled)') || []);
+            const primero = campos[0];
+            const ultimo = campos[campos.length - 1];
+            if (primero && ((event.shiftKey && document.activeElement === primero) || (!event.shiftKey && document.activeElement === ultimo)))
+            {
+                event.preventDefault();
+                (event.shiftKey ? ultimo : primero).focus();
+            }
+        }
+    }
+    formularioUsuarioValido()
+    {
+        return !!this.nuevo.usuario.trim() && !!this.nuevo.nombre.trim() && (!!this.usuarioEditar || this.nuevo.password.length >= 8) && (!this.nuevo.password || this.nuevo.password.length >= 8) && (this.nuevo.esNacional || this.nuevo.idEntidad > 0);
+    }
+    async guardarUsuario()
+    {
         await this.ejecutar(async () => {
             const body = { ...this.nuevo, idEntidad: this.nuevo.esNacional ? null : Number(this.nuevo.idEntidad) || null };
-            await this.api.post('usuarios', body, this.token());
-            this.nuevo = { usuario: '', nombre: '', password: '', rol: 'ENLACE_ESTATAL', esNacional: false, idEntidad: 0 };
-            this.usuarios.set(await this.api.get<Usuario[]>('usuarios', this.token())); this.mensaje.set('Usuario creado con acceso a DDCP.');
+            if (this.usuarioEditar)
+            {
+                await this.api.put(`usuarios/${this.usuarioEditar}`, body, this.token());
+            }
+            else
+            {
+                await this.api.post('usuarios', body, this.token());
+            }
+            const lista = await this.api.get<Usuario[]>('usuarios', this.token());
+            this.usuarios.set(lista);
+            const sesion = this.sesion();
+            const actual = lista.find(u => u.idUsuario === sesion?.usuario.idUsuario);
+            if (sesion && actual)
+            {
+                const actualizada = { ...sesion, usuario: actual };
+                this.sesion.set(actualizada);
+                sessionStorage.setItem('ddcp.sesion', JSON.stringify(actualizada));
+            }
+            this.modalUsuario = false;
+            this.nuevo.password = '';
+            this.mensaje.set(this.usuarioEditar ? 'Usuario actualizado.' : 'Usuario creado con acceso a DDCP.');
+            this.focoAnterior?.focus();
         });
     }
-    cambiarRol() { if (this.nuevo.rol === 'SUPER_USUARIO') this.nuevo.esNacional = true; }
+    cambiarRol()
+    {
+        if (this.nuevo.rol === 'SUPER_USUARIO')
+        {
+            this.nuevo.esNacional = true;
+        }
+    }
+    pedirEstado(usuario: Usuario)
+    {
+        if (this.ocupado() || usuario.idUsuario === this.sesion()?.usuario.idUsuario)
+        {
+            return;
+        }
+        this.error.set('');
+        this.focoAnterior = document.activeElement as HTMLElement;
+        this.estadoPendiente = usuario;
+        setTimeout(() => document.querySelector<HTMLButtonElement>('.estado-dialog button')?.focus());
+    }
+    async confirmarEstado()
+    {
+        const usuario = this.estadoPendiente;
+        if (!usuario)
+        {
+            return;
+        }
+        await this.ejecutar(async () => {
+            const habilitado = usuario.habilitado === false;
+            await this.api.put(`usuarios/${usuario.idUsuario}/estado`, { habilitado }, this.token());
+            this.usuarios.set(await this.api.get<Usuario[]>('usuarios', this.token()));
+            this.estadoPendiente = null;
+            this.paginaUsuarios = 1;
+            this.mensaje.set(habilitado ? 'Usuario activado.' : 'Usuario deshabilitado.');
+            this.focoAnterior?.focus();
+        });
+    }
+    async exportarUsuarios()
+    {
+        await this.ejecutar(async () => {
+            const blob = await this.api.blob('usuarios/exportar', this.token());
+            this.descargar(blob, 'DDCP_usuarios.xlsx');
+        });
+    }
 }
-

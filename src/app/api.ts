@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-export interface Usuario { idUsuario: number; usuario: string; nombre: string; rol: string; esNacional: boolean; idEntidad: number | null; }
+export interface Usuario { idUsuario: number; usuario: string; nombre: string; rol: string; esNacional: boolean; idEntidad: number | null; habilitado?: boolean; }
 export interface Sesion { token: string; expira: string; usuario: Usuario; }
 export interface Entidad { idEntidad: number; nombreEntidad: string; nombreCorto: string | null; }
 export interface Fila { idEntidad: number; nombreEntidad: string; dispositivos: string; personas: number; dispositivosAntes: string | null; personasAntes: number | null; revisionAntes: number | null; habilitadoAntes: boolean | null; }
@@ -19,5 +19,10 @@ export class Api {
     login(usuario: string, password: string) { return firstValueFrom(this.http.post<Sesion>(`${this.base}/auth/login`, { usuario, password })); }
     get<T>(path: string, token: string) { return firstValueFrom(this.http.get<T>(`${this.base}/${path}`, { headers: this.headers(token) })); }
     post<T>(path: string, body: unknown, token: string) { return firstValueFrom(this.http.post<T>(`${this.base}/${path}`, body, { headers: this.headers(token) })); }
+    put<T>(path: string, body: unknown, token: string)
+    {
+        return firstValueFrom(this.http.put<T>(`${this.base}/${path}`, body, { headers: this.headers(token) }));
+    }
     blob(path: string, token: string) { return firstValueFrom(this.http.get(`${this.base}/${path}`, { headers: this.headers(token), responseType: 'blob' })); }
 }
+
