@@ -624,3 +624,96 @@ body { font-family: Arial, Helvetica, sans-serif; font-size: 14px; }
     .usuarios-tools { flex-wrap: nowrap; }
     .buscador { width: 320px; flex: 0 0 320px; }
 }
+
+
+/* Tarjeta de cuenta del menú lateral. */
+@media (min-width: 981px)
+{
+    .topbar-logo
+    {
+        width: 550px;
+        max-width: 46vw;
+        height: 75px;
+    }
+}
+.account-card
+{
+    margin: 0 16px 24px;
+    overflow: hidden;
+    border: 1px solid #e9e3e5;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 4px 16px #29151c08;
+}
+.account-identity
+{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 18px 18px;
+    background: linear-gradient(135deg, #faf6f7, #fff 85%);
+}
+.account-label
+{
+    color: #71636a;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    line-height: 1.5;
+}
+.account-name
+{
+    margin: 9px 0 12px;
+    color: #29232a;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+.account-role
+{
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: #f0e5e9;
+    color: var(--guinda);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+.account-access
+{
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 18px;
+    border-top: 1px solid #eee7e9;
+    background: #fbfaf8;
+}
+.account-access svg
+{
+    width: 21px;
+    height: 21px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    fill: none;
+    stroke: #806331;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.account-access-label
+{
+    display: block;
+    margin-bottom: 4px;
+    color: #70666b;
+    font-size: 12px;
+    line-height: 1.4;
+}
+.account-access strong
+{
+    display: block;
+    color: #3c3036;
+    font-size: 14px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}

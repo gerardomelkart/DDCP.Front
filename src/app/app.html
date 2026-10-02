@@ -25,7 +25,20 @@
     <div class="app-layout">
         @if (menuAbierto()) { <button class="menu-backdrop" aria-label="Cerrar menú" (click)="menuAbierto.set(false)"></button> }
         <aside id="ddcp-navigation" class="sidebar" [class.sidebar-open]="menuAbierto()">
-            <div class="user-card"><div><strong>{{ sesion()!.usuario.nombre }}</strong><span>{{ rolNombre(sesion()!.usuario.rol) }}</span></div><div class="scope"><span>Alcance</span><strong>{{ sesion()!.usuario.esNacional ? 'Nacional' : nombreEntidad(sesion()!.usuario.idEntidad) }}</strong></div></div>
+            <section class="account-card" aria-label="Cuenta actual">
+                <div class="account-identity">
+                    <span class="account-label">CUENTA ACTUAL</span>
+                    <strong class="account-name">{{ sesion()!.usuario.nombre }}</strong>
+                    <span class="account-role">{{ rolNombre(sesion()!.usuario.rol) }}</span>
+                </div>
+                <div class="account-access">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg>
+                    <div>
+                        <span class="account-access-label">Ámbito de acceso</span>
+                        <strong>{{ sesion()!.usuario.esNacional ? 'Nacional' : nombreEntidad(sesion()!.usuario.idEntidad) }}</strong>
+                    </div>
+                </div>
+            </section>
             <p class="menu-heading">INFORMACIÓN</p>
             <nav aria-label="Secciones"><button [class.active]="pagina === 'consulta'" [attr.aria-current]="pagina === 'consulta' ? 'page' : null" (click)="ir('consulta')"><svg class="icon"><use href="#i-search" /></svg>Consulta de datos</button>
                 @if (puedeCargar()) { <button [class.active]="pagina === 'carga'" [attr.aria-current]="pagina === 'carga' ? 'page' : null" (click)="ir('carga')"><svg class="icon"><use href="#i-upload" /></svg>Carga mensual</button> }
@@ -153,5 +166,6 @@
     </div>
     @if (ocupado()) { <div class="processing-overlay" role="status" aria-live="polite"><div><span class="spinner"></span><strong>Procesando información…</strong><span>Espera un momento, por favor.</span></div></div> }
 }
+
 
 
