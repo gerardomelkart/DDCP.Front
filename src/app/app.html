@@ -8,7 +8,7 @@
 </defs></svg>
 @if (!sesion()) {
     <main class="login-page">
-        <img class="login-logo" src="img/LogoSEGURIDAD.png" alt="Gobierno de México · Seguridad · Secretariado Ejecutivo">
+        <div class="login-logo" role="img" aria-label="Gobierno de México · Seguridad · Secretariado Ejecutivo"></div>
         <section class="login-card">
             <div class="login-title"><span class="login-system">DDCP</span><h1>Puesta de dispositivos<br>a disposición</h1><p>Inicio de sesión</p></div>
             <form (ngSubmit)="entrar()" class="login-body">
@@ -21,7 +21,7 @@
         <span class="login-version">DDCP · Versión 0.2</span>
     </main>
 } @else {
-    <header class="topbar"><button class="menu-toggle" type="button" (click)="menuAbierto.set(!menuAbierto())" [attr.aria-expanded]="menuAbierto()" aria-controls="ddcp-navigation" aria-label="Abrir o cerrar menú"><svg class="icon"><use href="#i-menu" /></svg></button><img src="img/LogoSEGURIDAD2.png" alt="Gobierno de México · Seguridad · Secretariado Ejecutivo"><div class="topbar-system"><strong>DDCP</strong><span>Puesta de dispositivos a disposición</span></div></header>
+    <header class="topbar"><button class="menu-toggle" type="button" (click)="menuAbierto.set(!menuAbierto())" [attr.aria-expanded]="menuAbierto()" aria-controls="ddcp-navigation" aria-label="Abrir o cerrar menú"><svg class="icon"><use href="#i-menu" /></svg></button><div class="topbar-logo" role="img" aria-label="Gobierno de México · Seguridad · Secretariado Ejecutivo"></div><div class="topbar-system"><strong>DDCP</strong><span>Puesta de dispositivos a disposición</span></div></header>
     <div class="app-layout">
         @if (menuAbierto()) { <button class="menu-backdrop" aria-label="Cerrar menú" (click)="menuAbierto.set(false)"></button> }
         <aside id="ddcp-navigation" class="sidebar" [class.sidebar-open]="menuAbierto()">
@@ -81,3 +81,4 @@
     </div>
     @if (ocupado()) { <div class="processing-overlay" role="status" aria-live="polite"><div><span class="spinner"></span><strong>Procesando información…</strong><span>Espera un momento, por favor.</span></div></div> }
 }
+
