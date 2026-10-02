@@ -1,0 +1,69 @@
+@if (!sesion()) {
+    <main class="login-page">
+        <section class="login-card">
+            <span class="eyebrow">INGESTA DE DATOS</span>
+            <h1>DDCP</h1><p>Dispositivos decomisados en centros penitenciarios</p>
+            <form (ngSubmit)="entrar()">
+                <label>Usuario<input name="usuario" [(ngModel)]="loginUsuario" required autocomplete="username" maxlength="80"></label>
+                <label>Contraseña<input name="password" type="password" [(ngModel)]="loginPassword" required autocomplete="current-password"></label>
+                <button type="submit" [disabled]="ocupado()">{{ ocupado() ? 'Ingresando…' : 'Iniciar sesión' }}</button>
+            </form>
+            @if (error()) { <p class="alert error" role="alert">{{ error() }}</p> }
+        </section>
+    </main>
+} @else {
+    <header><div><span class="eyebrow">INGESTA DE DATOS</span><h1>DDCP</h1></div><div class="session"><strong>{{ sesion()!.usuario.nombre }}</strong><span>{{ sesion()!.usuario.rol }} · {{ sesion()!.usuario.esNacional ? 'Nacional' : 'Por entidad' }}</span><button class="secondary" (click)="salir()" [disabled]="ocupado()">Cerrar sesión</button></div></header>
+    <nav aria-label="Secciones">
+        <button [class.active]="pagina === 'consulta'" (click)="pagina = 'consulta'">Consulta</button>
+        @if (puedeCargar()) { <button [class.active]="pagina === 'carga'" (click)="pagina = 'carga'">Carga mensual</button> }
+        @if (sesion()!.usuario.rol === 'SUPER_USUARIO') { <button [class.active]="pagina === 'usuarios'" (click)="verUsuarios()" [disabled]="ocupado()">Usuarios</button> }
+    </nav>
+    <main class="workspace">
+        @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
+        @if (mensaje()) { <div class="alert success" role="status">{{ mensaje() }}</div> }
+        @if (pagina === 'consulta') {
+            <section class="panel"><h2>Consulta de información</h2><p>Consulta los registros confirmados dentro de tu alcance.</p>
+                <form class="filters" (ngSubmit)="buscar()">
+                    <label>Año<input type="number" name="consultaAnio" [(ngModel)]="consultaAnio" min="2000" max="2100" required></label>
+                    <label>Mes<select name="consultaMes" [(ngModel)]="consultaMes"><option [ngValue]="0">Todos los meses</option>@for (nombre of meses; track nombre; let i = $index) { <option [ngValue]="i + 1">{{ nombre }}</option> }</select></label>
+                    <label>Entidad<select name="consultaEntidad" [(ngModel)]="consultaEntidad"><option [ngValue]="0">{{ sesion()!.usuario.esNacional ? 'Todas las entidades' : 'Mi entidad' }}</option>@for (e of entidades(); track e.idEntidad) { <option [ngValue]="e.idEntidad">{{ e.nombreEntidad }}</option> }</select></label>
+                    <button type="submit" [disabled]="ocupado()">{{ ocupado() ? 'Consultando…' : 'Consultar' }}</button>
+                </form>
+            </section>
+            @if (consulta(); as datos) {
+                <div class="metrics"><div><span>Dispositivos decomisados</span><strong>{{ datos.totalDispositivos }}</strong></div><div><span>Personas puestas a disposición</span><strong>{{ datos.totalPersonas }}</strong></div><div><span>Registros</span><strong>{{ datos.filas.length }}</strong></div></div>
+                <section class="panel"><div class="title-row"><h2>Resultados</h2><button class="secondary" (click)="exportar()" [disabled]="!datos.filas.length">Descargar CSV</button></div><div class="table-scroll"><table><thead><tr><th>Año</th><th>Mes</th><th>Entidad</th><th class="number">Dispositivos</th><th class="number">Personas</th></tr></thead><tbody>@for (fila of datos.filas; track fila.anio + '-' + fila.mes + '-' + fila.idEntidad) { <tr><td>{{ fila.anio }}</td><td>{{ meses[fila.mes - 1] }}</td><td>{{ fila.nombreEntidad }}</td><td class="number">{{ fila.dispositivos }}</td><td class="number">{{ fila.personas }}</td></tr> } @empty { <tr><td colspan="5">No hay información confirmada para estos filtros.</td></tr> }</tbody></table></div></section>
+            }
+        }
+        @if (pagina === 'carga') {
+            <section class="panel"><h2>Carga mensual</h2><p>{{ sesion()!.usuario.esNacional ? 'El archivo debe incluir todas las entidades habilitadas.' : 'El archivo debe incluir únicamente tu entidad.' }} Descarga la plantilla para el periodo y captura las cantidades; cero y sin información son distintos.</p>
+                <form (ngSubmit)="validar()">
+                    <fieldset [disabled]="ocupado() || !!previa()"><div class="filters">
+                        <label>Año<input name="anio" type="number" [(ngModel)]="anio" min="2000" max="2100" required></label>
+                        <label>Mes<select name="mes" [(ngModel)]="mes" (ngModelChange)="cambiarMes()">@for (nombre of meses; track nombre; let i = $index) { <option [ngValue]="i + 1">{{ nombre }}</option> }</select></label>
+                        <button type="button" class="secondary" (click)="plantilla()">Descargar plantilla</button>
+                    </div><div class="filters"><label>Nombre de la hoja<input name="hoja" [(ngModel)]="hoja" required></label><label>Archivo Excel<input type="file" accept=".xlsx" (change)="seleccionarArchivo($event)" required></label><button type="submit">Validar y continuar</button></div></fieldset>
+                </form>
+            </section>
+            @if (previa(); as datos) {
+                <section class="panel"><h2>Revisa antes de confirmar · {{ meses[datos.mes - 1] }} {{ datos.anio }}</h2>
+                    @for (aviso of datos.advertencias; track aviso) { <div class="alert warning">{{ aviso }}</div> }
+                    <p><strong>{{ totalPreviaDispositivos() }}</strong> dispositivos · <strong>{{ totalPreviaPersonas() }}</strong> personas · {{ datos.filas.length }} entidades</p>
+                    <div class="table-scroll"><table><thead><tr><th>Entidad</th><th class="number">Dispositivos anteriores</th><th class="number">Dispositivos nuevos</th><th class="number">Personas anteriores</th><th class="number">Personas nuevas</th></tr></thead><tbody>@for (fila of datos.filas; track fila.idEntidad) { <tr><td>{{ fila.nombreEntidad }}</td><td class="number">{{ fila.dispositivosAntes ?? 'Sin registro' }}</td><td class="number">{{ fila.dispositivos }}</td><td class="number">{{ fila.personasAntes ?? 'Sin registro' }}</td><td class="number">{{ fila.personas }}</td></tr> }</tbody></table></div>
+                    <p>Al confirmar, los datos quedan disponibles para consulta. Las entidades ajenas a esta carga conservan sus datos.</p>
+                    <div class="actions"><button (click)="confirmar()" [disabled]="ocupado()">Confirmar carga</button><button class="secondary" (click)="cancelar()" [disabled]="ocupado()">Cancelar carga</button></div>
+                </section>
+            }
+        }
+        @if (pagina === 'usuarios') {
+            <section class="panel"><h2>Crear usuario</h2><form (ngSubmit)="crearUsuario()"><fieldset [disabled]="ocupado()"><div class="filters">
+                <label>Usuario<input name="nuevoUsuario" [(ngModel)]="nuevo.usuario" required maxlength="80" autocomplete="off"></label><label>Nombre<input name="nuevoNombre" [(ngModel)]="nuevo.nombre" required maxlength="160"></label><label>Contraseña inicial<input name="nuevoPassword" type="password" [(ngModel)]="nuevo.password" required minlength="8" autocomplete="new-password"></label>
+                <label>Rol<select name="nuevoRol" [(ngModel)]="nuevo.rol" (ngModelChange)="cambiarRol()"><option value="SUPER_USUARIO">Super usuario</option><option value="ENLACE_ESTATAL">Enlace</option><option value="CONSULTA">Consulta</option></select></label>
+                <label>Alcance<select name="nuevoAlcance" [(ngModel)]="nuevo.esNacional" [disabled]="nuevo.rol === 'SUPER_USUARIO'"><option [ngValue]="true">Nacional</option><option [ngValue]="false">Por entidad</option></select></label>
+                @if (!nuevo.esNacional) { <label>Entidad<select name="nuevaEntidad" [(ngModel)]="nuevo.idEntidad" required><option [ngValue]="0">Seleccionar</option>@for (e of entidades(); track e.idEntidad) { <option [ngValue]="e.idEntidad">{{ e.nombreEntidad }}</option> }</select></label> }
+                <button type="submit">Crear usuario</button>
+            </div></fieldset></form></section>
+            <section class="panel"><h2>Usuarios registrados</h2><div class="table-scroll"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Alcance</th><th>ID entidad</th></tr></thead><tbody>@for (u of usuarios(); track u.idUsuario) { <tr><td>{{ u.usuario }}</td><td>{{ u.nombre }}</td><td>{{ u.rol }}</td><td>{{ u.esNacional ? 'Nacional' : 'Por entidad' }}</td><td>{{ u.idEntidad ?? 'Todas' }}</td></tr> }</tbody></table></div></section>
+        }
+    </main>
+}
