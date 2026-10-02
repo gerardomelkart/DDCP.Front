@@ -1,69 +1,83 @@
+<svg class="icon-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5" /></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" /><path d="m15 15 6 6" /></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21v-3a8 8 0 0 1 16 0v3" /></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5V3Zm9 0v6h5M8 13h8m-8 4h8" /></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6" /></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" /></symbol>
+</defs></svg>
 @if (!sesion()) {
     <main class="login-page">
+        <img class="login-logo" src="img/LogoSEGURIDAD.png" alt="Gobierno de México · Seguridad · Secretariado Ejecutivo">
         <section class="login-card">
-            <span class="eyebrow">INGESTA DE DATOS</span>
-            <h1>DDCP</h1><p>Dispositivos decomisados en centros penitenciarios</p>
-            <form (ngSubmit)="entrar()">
-                <label>Usuario<input name="usuario" [(ngModel)]="loginUsuario" required autocomplete="username" maxlength="80"></label>
-                <label>Contraseña<input name="password" type="password" [(ngModel)]="loginPassword" required autocomplete="current-password"></label>
-                <button type="submit" [disabled]="ocupado()">{{ ocupado() ? 'Ingresando…' : 'Iniciar sesión' }}</button>
+            <div class="login-title"><span class="login-system">DDCP</span><h1>Puesta de dispositivos<br>a disposición</h1><p>Inicio de sesión</p></div>
+            <form (ngSubmit)="entrar()" class="login-body">
+                <label for="login-usuario">Nombre de usuario</label><input id="login-usuario" name="usuario" [(ngModel)]="loginUsuario" required autocomplete="username" maxlength="80" placeholder="Captura tu usuario">
+                <label for="login-password">Contraseña</label><input id="login-password" name="password" type="password" [(ngModel)]="loginPassword" required autocomplete="current-password" placeholder="Captura tu contraseña">
+                @if (error()) { <div class="login-error" role="alert">{{ error() }}</div> }
+                <button class="btn-login" type="submit" [disabled]="ocupado()">{{ ocupado() ? 'Ingresando…' : 'Iniciar sesión' }} <span aria-hidden="true">→</span></button>
             </form>
-            @if (error()) { <p class="alert error" role="alert">{{ error() }}</p> }
         </section>
+        <span class="login-version">DDCP · Versión 0.2</span>
     </main>
 } @else {
-    <header><div><span class="eyebrow">INGESTA DE DATOS</span><h1>DDCP</h1></div><div class="session"><strong>{{ sesion()!.usuario.nombre }}</strong><span>{{ sesion()!.usuario.rol }} · {{ sesion()!.usuario.esNacional ? 'Nacional' : 'Por entidad' }}</span><button class="secondary" (click)="salir()" [disabled]="ocupado()">Cerrar sesión</button></div></header>
-    <nav aria-label="Secciones">
-        <button [class.active]="pagina === 'consulta'" (click)="pagina = 'consulta'">Consulta</button>
-        @if (puedeCargar()) { <button [class.active]="pagina === 'carga'" (click)="pagina = 'carga'">Carga mensual</button> }
-        @if (sesion()!.usuario.rol === 'SUPER_USUARIO') { <button [class.active]="pagina === 'usuarios'" (click)="verUsuarios()" [disabled]="ocupado()">Usuarios</button> }
-    </nav>
-    <main class="workspace">
-        @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
-        @if (mensaje()) { <div class="alert success" role="status">{{ mensaje() }}</div> }
-        @if (pagina === 'consulta') {
-            <section class="panel"><h2>Consulta de información</h2><p>Consulta los registros confirmados dentro de tu alcance.</p>
-                <form class="filters" (ngSubmit)="buscar()">
+    <header class="topbar"><button class="menu-toggle" type="button" (click)="menuAbierto.set(!menuAbierto())" [attr.aria-expanded]="menuAbierto()" aria-controls="ddcp-navigation" aria-label="Abrir o cerrar menú"><svg class="icon"><use href="#i-menu" /></svg></button><img src="img/LogoSEGURIDAD2.png" alt="Gobierno de México · Seguridad · Secretariado Ejecutivo"><div class="topbar-system"><strong>DDCP</strong><span>Puesta de dispositivos a disposición</span></div></header>
+    <div class="app-layout">
+        @if (menuAbierto()) { <button class="menu-backdrop" aria-label="Cerrar menú" (click)="menuAbierto.set(false)"></button> }
+        <aside id="ddcp-navigation" class="sidebar" [class.sidebar-open]="menuAbierto()">
+            <div class="user-card"><div class="user-avatar"><svg class="icon"><use href="#i-user" /></svg></div><div><strong>{{ sesion()!.usuario.nombre }}</strong><span>{{ rolNombre(sesion()!.usuario.rol) }}</span></div><div class="scope"><span>Alcance</span><strong>{{ sesion()!.usuario.esNacional ? 'Nacional' : nombreEntidad(sesion()!.usuario.idEntidad) }}</strong></div></div>
+            <p class="menu-heading">INFORMACIÓN</p>
+            <nav aria-label="Secciones"><button [class.active]="pagina === 'consulta'" [attr.aria-current]="pagina === 'consulta' ? 'page' : null" (click)="ir('consulta')"><svg class="icon"><use href="#i-search" /></svg>Consulta de datos</button>
+                @if (puedeCargar()) { <button [class.active]="pagina === 'carga'" [attr.aria-current]="pagina === 'carga' ? 'page' : null" (click)="ir('carga')"><svg class="icon"><use href="#i-upload" /></svg>Carga mensual</button> }
+                @if (sesion()!.usuario.rol === 'SUPER_USUARIO') { <button [class.active]="pagina === 'usuarios'" [attr.aria-current]="pagina === 'usuarios' ? 'page' : null" (click)="verUsuarios()" [disabled]="ocupado()"><svg class="icon"><use href="#i-user" /></svg>Administración de usuarios</button> }
+            </nav>
+            <div class="sidebar-bottom"><span>DDCP · 0.2</span><button class="secondary" (click)="salir()" [disabled]="ocupado()">Cerrar sesión</button></div>
+        </aside>
+        <main class="workspace">
+            <div class="page-heading"><div><span class="eyebrow">DDCP / {{ pagina === 'consulta' ? 'Consulta' : pagina === 'carga' ? 'Carga mensual' : 'Usuarios' }}</span><h1>{{ pagina === 'consulta' ? 'Consulta de información' : pagina === 'carga' ? 'Carga de información' : 'Administración de usuarios' }}</h1><p>{{ pagina === 'consulta' ? 'Revisa la información confirmada por periodo y entidad.' : pagina === 'carga' ? 'Envía el reporte mensual y revisa sus datos antes de confirmar.' : 'Crea usuarios y asigna su rol y alcance de consulta.' }}</p></div><span class="scope-badge">{{ sesion()!.usuario.esNacional ? 'Cobertura nacional' : nombreEntidad(sesion()!.usuario.idEntidad) }}</span></div>
+            @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
+            @if (mensaje()) { <div class="alert success" role="status">{{ mensaje() }}</div> }
+            @if (pagina === 'consulta') {
+                <section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-search" /></svg>Filtros de consulta</div><form class="panel-body filters" (ngSubmit)="buscar()">
                     <label>Año<input type="number" name="consultaAnio" [(ngModel)]="consultaAnio" min="2000" max="2100" required></label>
                     <label>Mes<select name="consultaMes" [(ngModel)]="consultaMes"><option [ngValue]="0">Todos los meses</option>@for (nombre of meses; track nombre; let i = $index) { <option [ngValue]="i + 1">{{ nombre }}</option> }</select></label>
                     <label>Entidad<select name="consultaEntidad" [(ngModel)]="consultaEntidad"><option [ngValue]="0">{{ sesion()!.usuario.esNacional ? 'Todas las entidades' : 'Mi entidad' }}</option>@for (e of entidades(); track e.idEntidad) { <option [ngValue]="e.idEntidad">{{ e.nombreEntidad }}</option> }</select></label>
-                    <button type="submit" [disabled]="ocupado()">{{ ocupado() ? 'Consultando…' : 'Consultar' }}</button>
-                </form>
-            </section>
-            @if (consulta(); as datos) {
-                <div class="metrics"><div><span>Dispositivos decomisados</span><strong>{{ datos.totalDispositivos }}</strong></div><div><span>Personas puestas a disposición</span><strong>{{ datos.totalPersonas }}</strong></div><div><span>Registros</span><strong>{{ datos.filas.length }}</strong></div></div>
-                <section class="panel"><div class="title-row"><h2>Resultados</h2><button class="secondary" (click)="exportar()" [disabled]="!datos.filas.length">Descargar CSV</button></div><div class="table-scroll"><table><thead><tr><th>Año</th><th>Mes</th><th>Entidad</th><th class="number">Dispositivos</th><th class="number">Personas</th></tr></thead><tbody>@for (fila of datos.filas; track fila.anio + '-' + fila.mes + '-' + fila.idEntidad) { <tr><td>{{ fila.anio }}</td><td>{{ meses[fila.mes - 1] }}</td><td>{{ fila.nombreEntidad }}</td><td class="number">{{ fila.dispositivos }}</td><td class="number">{{ fila.personas }}</td></tr> } @empty { <tr><td colspan="5">No hay información confirmada para estos filtros.</td></tr> }</tbody></table></div></section>
+                    <button type="submit" [disabled]="ocupado()"><svg class="icon"><use href="#i-search" /></svg>{{ ocupado() ? 'Consultando…' : 'Consultar' }}</button>
+                </form></section>
+                @if (consulta(); as datos) {
+                    <div class="metrics"><div><span>Dispositivos decomisados</span><strong>{{ datos.totalDispositivos }}</strong></div><div><span>Personas puestas a disposición</span><strong>{{ datos.totalPersonas }}</strong></div><div><span>Registros consultados</span><strong>{{ datos.filas.length }}</strong></div></div>
+                    <section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-file" /></svg>Resultados de la consulta<button class="header-action" (click)="exportar()" [disabled]="!datos.filas.length">Descargar CSV</button></div><div class="table-scroll"><table><thead><tr><th>Año</th><th>Mes</th><th>Entidad</th><th class="number">Dispositivos</th><th class="number">Personas</th></tr></thead><tbody>@for (fila of datos.filas; track fila.anio + '-' + fila.mes + '-' + fila.idEntidad) { <tr><td>{{ fila.anio }}</td><td>{{ meses[fila.mes - 1] }}</td><td>{{ fila.nombreEntidad }}</td><td class="number">{{ fila.dispositivos }}</td><td class="number">{{ fila.personas }}</td></tr> } @empty { <tr><td colspan="5" class="empty-state">No hay información confirmada para estos filtros.</td></tr> }</tbody></table></div></section>
+                } @else { <section class="empty-panel"><svg class="icon"><use href="#i-search" /></svg><h2>Selecciona un periodo para comenzar</h2><p>La consulta mostrará los dispositivos y las personas reportadas dentro de tu alcance.</p></section> }
             }
-        }
-        @if (pagina === 'carga') {
-            <section class="panel"><h2>Carga mensual</h2><p>{{ sesion()!.usuario.esNacional ? 'El archivo debe incluir todas las entidades habilitadas.' : 'El archivo debe incluir únicamente tu entidad.' }} Descarga la plantilla para el periodo y captura las cantidades; cero y sin información son distintos.</p>
-                <form (ngSubmit)="validar()">
-                    <fieldset [disabled]="ocupado() || !!previa()"><div class="filters">
-                        <label>Año<input name="anio" type="number" [(ngModel)]="anio" min="2000" max="2100" required></label>
-                        <label>Mes<select name="mes" [(ngModel)]="mes" (ngModelChange)="cambiarMes()">@for (nombre of meses; track nombre; let i = $index) { <option [ngValue]="i + 1">{{ nombre }}</option> }</select></label>
-                        <button type="button" class="secondary" (click)="plantilla()">Descargar plantilla</button>
-                    </div><div class="filters"><label>Nombre de la hoja<input name="hoja" [(ngModel)]="hoja" required></label><label>Archivo Excel<input type="file" accept=".xlsx" (change)="seleccionarArchivo($event)" required></label><button type="submit">Validar y continuar</button></div></fieldset>
-                </form>
-            </section>
-            @if (previa(); as datos) {
-                <section class="panel"><h2>Revisa antes de confirmar · {{ meses[datos.mes - 1] }} {{ datos.anio }}</h2>
-                    @for (aviso of datos.advertencias; track aviso) { <div class="alert warning">{{ aviso }}</div> }
-                    <p><strong>{{ totalPreviaDispositivos() }}</strong> dispositivos · <strong>{{ totalPreviaPersonas() }}</strong> personas · {{ datos.filas.length }} entidades</p>
-                    <div class="table-scroll"><table><thead><tr><th>Entidad</th><th class="number">Dispositivos anteriores</th><th class="number">Dispositivos nuevos</th><th class="number">Personas anteriores</th><th class="number">Personas nuevas</th></tr></thead><tbody>@for (fila of datos.filas; track fila.idEntidad) { <tr><td>{{ fila.nombreEntidad }}</td><td class="number">{{ fila.dispositivosAntes ?? 'Sin registro' }}</td><td class="number">{{ fila.dispositivos }}</td><td class="number">{{ fila.personasAntes ?? 'Sin registro' }}</td><td class="number">{{ fila.personas }}</td></tr> }</tbody></table></div>
-                    <p>Al confirmar, los datos quedan disponibles para consulta. Las entidades ajenas a esta carga conservan sus datos.</p>
-                    <div class="actions"><button (click)="confirmar()" [disabled]="ocupado()">Confirmar carga</button><button class="secondary" (click)="cancelar()" [disabled]="ocupado()">Cancelar carga</button></div>
-                </section>
+            @if (pagina === 'carga') {
+                <div class="upload-steps" aria-label="Pasos de carga"><div [class.active]="!previa()"><span>1</span>Seleccionar archivo</div><div [class.active]="!!previa()"><span>2</span>Revisar información</div><div><span>3</span>Confirmar carga</div></div>
+                <div class="upload-layout">
+                    <section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-upload" /></svg>Reporte mensual</div><div class="panel-body"><div class="module-intro"><svg class="icon"><use href="#i-file" /></svg><div><strong>Dispositivos y personas puestas a disposición</strong><p>{{ sesion()!.usuario.esNacional ? 'Incluye todas las entidades habilitadas en el reporte del mes.' : 'Incluye únicamente la información de tu entidad.' }}</p></div></div>
+                        <form (ngSubmit)="validar()"><fieldset [disabled]="ocupado() || !!previa()"><div class="filters"><label>Año<input name="anio" type="number" [(ngModel)]="anio" min="2000" max="2100" required></label><label>Mes<select name="mes" [(ngModel)]="mes" (ngModelChange)="cambiarMes()">@for (nombre of meses; track nombre; let i = $index) { <option [ngValue]="i + 1">{{ nombre }}</option> }</select></label><label>Nombre de la hoja<input name="hoja" [(ngModel)]="hoja" required></label></div>
+                            <div class="dropzone" [class.file-ready]="!!archivo" [class.file-dragging]="arrastrando()" [class.file-locked]="ocupado() || !!previa()" (dragenter)="arrastrarArchivo($event)" (dragover)="arrastrarArchivo($event)" (dragleave)="salirArrastre($event)" (drop)="soltarArchivo($event)">
+                                <svg class="upload-icon icon"><use [attr.href]="archivo ? '#i-check' : '#i-upload'" /></svg><strong>{{ arrastrando() ? 'Suelta aquí tu archivo' : archivo ? archivo.name : 'Arrastra aquí tu archivo Excel' }}</strong><span>{{ archivo ? tamanoArchivo() + ' · Archivo seleccionado' : 'o selecciónalo desde tu equipo' }}</span>
+                                <label class="file-picker" for="archivo-excel">{{ archivo ? 'Cambiar archivo' : 'Seleccionar archivo' }}<input id="archivo-excel" type="file" accept=".xlsx" aria-label="Archivo Excel" (change)="seleccionarArchivo($event)" [disabled]="ocupado() || !!previa()"></label>
+                                @if (archivo) { <button type="button" class="remove-file" (click)="quitarArchivo()">Quitar archivo</button> }<small>Formato XLSX · Máximo 10 MB · Un archivo por carga</small>
+                            </div>
+                            <div class="upload-footer"><span>La información se guardará al confirmar la carga.</span><button type="submit" [disabled]="!archivo"><svg class="icon"><use href="#i-check" /></svg>Validar y continuar</button></div>
+                        </fieldset></form>
+                    </div></section>
+                    <aside class="upload-help"><section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-file" /></svg>Descargar plantilla</div><div class="panel-body"><p>Usa la plantilla del periodo seleccionado para preparar tu reporte.</p><button class="template-download" (click)="plantilla()" [disabled]="ocupado()"><span class="excel-badge">X</span><strong>Plantilla mensual</strong><span>{{ meses[mes - 1] }} {{ anio }}</span></button><small>La plantilla incluye las entidades de tu alcance.</small></div></section><section class="help-note"><strong>Antes de continuar</strong><ul><li>Captura cantidades enteras y no negativas.</li><li>Escribe 0 cuando se reporten cero casos.</li><li>No agregues notas ni fórmulas a las cantidades.</li><li>Si el mes ya tiene datos, revisa las diferencias antes de confirmar.</li></ul></section></aside>
+                </div>
+                @if (previa(); as datos) {
+                    <section class="panel preview"><div class="panel-header"><svg class="icon"><use href="#i-check" /></svg>Vista previa · {{ meses[datos.mes - 1] }} {{ datos.anio }}</div><div class="panel-body">@for (aviso of datos.advertencias; track aviso) { <div class="alert warning">{{ aviso }}</div> }<div class="preview-summary"><strong>{{ totalPreviaDispositivos() }}</strong> dispositivos <span>·</span> <strong>{{ totalPreviaPersonas() }}</strong> personas <span>·</span> {{ datos.filas.length }} entidades</div><div class="table-scroll"><table><thead><tr><th>Entidad</th><th class="number">Dispositivos anteriores</th><th class="number">Dispositivos nuevos</th><th class="number">Personas anteriores</th><th class="number">Personas nuevas</th></tr></thead><tbody>@for (fila of datos.filas; track fila.idEntidad) { <tr><td>{{ fila.nombreEntidad }}</td><td class="number">{{ fila.dispositivosAntes ?? 'Sin registro' }}</td><td class="number">{{ fila.dispositivos }}</td><td class="number">{{ fila.personasAntes ?? 'Sin registro' }}</td><td class="number">{{ fila.personas }}</td></tr> }</tbody></table></div><div class="preview-actions"><p>Al confirmar, la información estará disponible para consulta.</p><button class="secondary" (click)="cancelar()" [disabled]="ocupado()">Cancelar carga</button><button (click)="confirmar()" [disabled]="ocupado()">Confirmar carga</button></div></div></section>
+                }
             }
-        }
-        @if (pagina === 'usuarios') {
-            <section class="panel"><h2>Crear usuario</h2><form (ngSubmit)="crearUsuario()"><fieldset [disabled]="ocupado()"><div class="filters">
-                <label>Usuario<input name="nuevoUsuario" [(ngModel)]="nuevo.usuario" required maxlength="80" autocomplete="off"></label><label>Nombre<input name="nuevoNombre" [(ngModel)]="nuevo.nombre" required maxlength="160"></label><label>Contraseña inicial<input name="nuevoPassword" type="password" [(ngModel)]="nuevo.password" required minlength="8" autocomplete="new-password"></label>
-                <label>Rol<select name="nuevoRol" [(ngModel)]="nuevo.rol" (ngModelChange)="cambiarRol()"><option value="SUPER_USUARIO">Super usuario</option><option value="ENLACE_ESTATAL">Enlace</option><option value="CONSULTA">Consulta</option></select></label>
-                <label>Alcance<select name="nuevoAlcance" [(ngModel)]="nuevo.esNacional" [disabled]="nuevo.rol === 'SUPER_USUARIO'"><option [ngValue]="true">Nacional</option><option [ngValue]="false">Por entidad</option></select></label>
-                @if (!nuevo.esNacional) { <label>Entidad<select name="nuevaEntidad" [(ngModel)]="nuevo.idEntidad" required><option [ngValue]="0">Seleccionar</option>@for (e of entidades(); track e.idEntidad) { <option [ngValue]="e.idEntidad">{{ e.nombreEntidad }}</option> }</select></label> }
-                <button type="submit">Crear usuario</button>
-            </div></fieldset></form></section>
-            <section class="panel"><h2>Usuarios registrados</h2><div class="table-scroll"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Alcance</th><th>ID entidad</th></tr></thead><tbody>@for (u of usuarios(); track u.idUsuario) { <tr><td>{{ u.usuario }}</td><td>{{ u.nombre }}</td><td>{{ u.rol }}</td><td>{{ u.esNacional ? 'Nacional' : 'Por entidad' }}</td><td>{{ u.idEntidad ?? 'Todas' }}</td></tr> }</tbody></table></div></section>
-        }
-    </main>
+            @if (pagina === 'usuarios') {
+                <section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-user" /></svg>Crear usuario</div><form class="panel-body" (ngSubmit)="crearUsuario()"><fieldset [disabled]="ocupado()"><div class="user-fields">
+                    <label>Usuario<input name="nuevoUsuario" [(ngModel)]="nuevo.usuario" required maxlength="80" autocomplete="off"></label><label>Nombre completo<input name="nuevoNombre" [(ngModel)]="nuevo.nombre" required maxlength="160"></label><label>Contraseña inicial<input name="nuevoPassword" type="password" [(ngModel)]="nuevo.password" required minlength="8" autocomplete="new-password"></label>
+                    <label>Rol<select name="nuevoRol" [(ngModel)]="nuevo.rol" (ngModelChange)="cambiarRol()"><option value="SUPER_USUARIO">Super usuario</option><option value="ENLACE_ESTATAL">Enlace</option><option value="CONSULTA">Consulta</option></select></label><label>Alcance<select name="nuevoAlcance" [(ngModel)]="nuevo.esNacional" [disabled]="nuevo.rol === 'SUPER_USUARIO'"><option [ngValue]="true">Nacional</option><option [ngValue]="false">Por entidad</option></select></label>
+                    @if (!nuevo.esNacional) { <label>Entidad<select name="nuevaEntidad" [(ngModel)]="nuevo.idEntidad" required><option [ngValue]="0">Seleccionar</option>@for (e of entidades(); track e.idEntidad) { <option [ngValue]="e.idEntidad">{{ e.nombreEntidad }}</option> }</select></label> }
+                </div><div class="actions"><button type="submit">Crear usuario</button></div></fieldset></form></section>
+                <section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-user" /></svg>Usuarios registrados</div><div class="table-scroll"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Alcance</th><th>Entidad</th></tr></thead><tbody>@for (u of usuarios(); track u.idUsuario) { <tr><td>{{ u.usuario }}</td><td>{{ u.nombre }}</td><td>{{ rolNombre(u.rol) }}</td><td>{{ u.esNacional ? 'Nacional' : 'Por entidad' }}</td><td>{{ u.esNacional ? 'Todas' : nombreEntidad(u.idEntidad) }}</td></tr> }</tbody></table></div></section>
+            }
+            <footer class="page-footer">DDCP · Puesta de dispositivos a disposición</footer>
+        </main>
+    </div>
+    @if (ocupado()) { <div class="processing-overlay" role="status" aria-live="polite"><div><span class="spinner"></span><strong>Procesando información…</strong><span>Espera un momento, por favor.</span></div></div> }
 }

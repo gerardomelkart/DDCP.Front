@@ -14,6 +14,8 @@ export class App {
     readonly previa = signal<Previa | null>(null);
     readonly consulta = signal<Consulta | null>(null);
     readonly usuarios = signal<Usuario[]>([]);
+    readonly arrastrando = signal(false);
+    readonly menuAbierto = signal(false);
     readonly meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     pagina: 'consulta' | 'carga' | 'usuarios' = 'consulta';
     loginUsuario = '';
@@ -28,7 +30,7 @@ export class App {
     nuevo = { usuario: '', nombre: '', password: '', rol: 'ENLACE_ESTATAL', esNacional: false, idEntidad: 0 };
     constructor(private api: Api) { if (this.sesion()) void this.inicializar(); }
     private recuperar(): Sesion | null {
-        try { const data = JSON.parse(sessionStorage.getItem('ingesta.sesion') || 'null') as Sesion | null; return data?.token && Date.parse(data.expira) > Date.now() ? data : null; }
+        try { const data = JSON.parse(sessionStorage.getItem('ddcp.sesion') || 'null') as Sesion | null; return data?.token && Date.parse(data.expira) > Date.now() ? data : null; }
         catch { return null; }
     }
     private token(): string {
@@ -41,7 +43,7 @@ export class App {
         this.ocupado.set(true); this.error.set(''); this.mensaje.set('');
         try { await action(); }
         catch (error) {
-            if (error instanceof HttpErrorResponse) { this.error.set(error.error?.mensaje || (error.status === 0 ? 'No se pudo conectar con la API. Verifique que esté ejecutándose.' : 'No fue posible completar la operación.')); if (error.status === 401) this.salir(); }
+            if (error instanceof HttpErrorResponse) { this.error.set(error.error?.mensaje || (error.status === 0 ? 'No fue posible conectar con el sistema. Intente nuevamente en unos momentos.' : 'No fue posible completar la operación.')); if (error.status === 401) this.salir(); }
             else this.error.set(error instanceof Error ? error.message : 'Error de operación.');
         }
         finally { this.ocupado.set(false); }
@@ -49,15 +51,32 @@ export class App {
     async entrar() {
         await this.ejecutar(async () => {
             const sesion = await this.api.login(this.loginUsuario, this.loginPassword);
-            this.loginPassword = ''; this.sesion.set(sesion); sessionStorage.setItem('ingesta.sesion', JSON.stringify(sesion));
+            this.loginPassword = ''; this.sesion.set(sesion); sessionStorage.setItem('ddcp.sesion', JSON.stringify(sesion));
             this.entidades.set(await this.api.get<Entidad[]>('ddcp/entidades', this.token()));
         });
     }
     async inicializar() { await this.ejecutar(async () => this.entidades.set(await this.api.get<Entidad[]>('ddcp/entidades', this.token()))); }
-    salir() { sessionStorage.removeItem('ingesta.sesion'); this.sesion.set(null); this.previa.set(null); this.consulta.set(null); this.entidades.set([]); this.usuarios.set([]); this.archivo = null; this.pagina = 'consulta'; }
+    salir() { sessionStorage.removeItem('ddcp.sesion'); this.sesion.set(null); this.previa.set(null); this.consulta.set(null); this.entidades.set([]); this.usuarios.set([]); this.archivo = null; this.pagina = 'consulta'; this.menuAbierto.set(false); this.arrastrando.set(false); }
     puedeCargar() { return this.sesion()?.usuario.rol !== 'CONSULTA'; }
     cambiarMes() { this.hoja = this.meses[this.mes - 1]; }
-    seleccionarArchivo(event: Event) { this.archivo = (event.target as HTMLInputElement).files?.[0] || null; }
+    seleccionarArchivo(event: Event) { const input = event.target as HTMLInputElement; if (input.files?.length) this.recibirArchivo(Array.from(input.files)); input.value = ''; }
+    private recibirArchivo(files: File[]) {
+        if (this.ocupado() || this.previa()) return;
+        this.error.set(''); this.mensaje.set('');
+        if (files.length !== 1) { this.error.set('Seleccione un solo archivo Excel para la carga.'); return; }
+        const file = files[0];
+        if (!file.name.toLowerCase().endsWith('.xlsx')) { this.error.set('El archivo debe tener formato .xlsx.'); return; }
+        if (!file.size || file.size > 10 * 1024 * 1024) { this.error.set('El archivo debe tener contenido y pesar como máximo 10 MB.'); return; }
+        this.archivo = file;
+    }
+    arrastrarArchivo(event: DragEvent) { event.preventDefault(); event.stopPropagation(); if (this.ocupado() || this.previa()) return; this.arrastrando.set(true); if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'; }
+    salirArrastre(event: DragEvent) { event.preventDefault(); if (event.relatedTarget instanceof Node && (event.currentTarget as HTMLElement).contains(event.relatedTarget)) return; this.arrastrando.set(false); }
+    soltarArchivo(event: DragEvent) { event.preventDefault(); event.stopPropagation(); this.arrastrando.set(false); this.recibirArchivo(Array.from(event.dataTransfer?.files || [])); }
+    quitarArchivo() { if (!this.ocupado() && !this.previa()) { this.archivo = null; this.error.set(''); } }
+    tamanoArchivo() { return this.archivo ? (this.archivo.size / 1024 / 1024 < 1 ? `${Math.ceil(this.archivo.size / 1024)} KB` : `${(this.archivo.size / 1024 / 1024).toFixed(1)} MB`) : ''; }
+    rolNombre(rol: string) { return rol === 'SUPER_USUARIO' ? 'Super usuario' : rol === 'ENLACE_ESTATAL' ? 'Enlace' : 'Consulta'; }
+    nombreEntidad(id: number | null) { return this.entidades().find(x => x.idEntidad === id)?.nombreEntidad || 'Entidad asignada'; }
+    ir(pagina: 'consulta' | 'carga' | 'usuarios') { this.pagina = pagina; this.menuAbierto.set(false); }
     async validar() {
         await this.ejecutar(async () => {
             if (!this.archivo) throw new Error('Seleccione el archivo Excel.');
@@ -102,7 +121,7 @@ export class App {
     private descargar(blob: Blob, nombre: string) { const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = nombre; link.click(); URL.revokeObjectURL(url); }
     totalPreviaDispositivos() { return (this.previa()?.filas || []).reduce((sum, fila) => sum + BigInt(fila.dispositivos), 0n).toString(); }
     totalPreviaPersonas() { return (this.previa()?.filas || []).reduce((sum, fila) => sum + fila.personas, 0); }
-    async verUsuarios() { this.pagina = 'usuarios'; await this.ejecutar(async () => this.usuarios.set(await this.api.get<Usuario[]>('usuarios', this.token()))); }
+    async verUsuarios() { this.ir('usuarios'); await this.ejecutar(async () => this.usuarios.set(await this.api.get<Usuario[]>('usuarios', this.token()))); }
     async crearUsuario() {
         await this.ejecutar(async () => {
             const body = { ...this.nuevo, idEntidad: this.nuevo.esNacional ? null : Number(this.nuevo.idEntidad) || null };
@@ -113,3 +132,4 @@ export class App {
     }
     cambiarRol() { if (this.nuevo.rol === 'SUPER_USUARIO') this.nuevo.esNacional = true; }
 }
+
