@@ -22,7 +22,6 @@ export class App {
     loginPassword = '';
     anio = new Date().getFullYear();
     mes = new Date().getMonth() + 1;
-    hoja = this.meses[this.mes - 1];
     consultaAnio = this.anio;
     consultaMes = 0;
     consultaEntidad = 0;
@@ -58,7 +57,6 @@ export class App {
     async inicializar() { await this.ejecutar(async () => this.entidades.set(await this.api.get<Entidad[]>('ddcp/entidades', this.token()))); }
     salir() { sessionStorage.removeItem('ddcp.sesion'); this.sesion.set(null); this.previa.set(null); this.consulta.set(null); this.entidades.set([]); this.usuarios.set([]); this.archivo = null; this.pagina = 'consulta'; this.menuAbierto.set(false); this.arrastrando.set(false); }
     puedeCargar() { return this.sesion()?.usuario.rol !== 'CONSULTA'; }
-    cambiarMes() { this.hoja = this.meses[this.mes - 1]; }
     seleccionarArchivo(event: Event) { const input = event.target as HTMLInputElement; if (input.files?.length) this.recibirArchivo(Array.from(input.files)); input.value = ''; }
     private recibirArchivo(files: File[]) {
         if (this.ocupado() || this.previa()) return;
@@ -79,9 +77,14 @@ export class App {
     ir(pagina: 'consulta' | 'carga' | 'usuarios') { this.pagina = pagina; this.menuAbierto.set(false); }
     async validar() {
         await this.ejecutar(async () => {
-            if (!this.archivo) throw new Error('Seleccione el archivo Excel.');
+            if (!this.archivo)
+            {
+                throw new Error('Seleccione el archivo Excel.');
+            }
             const data = new FormData();
-            data.append('anio', String(this.anio)); data.append('mes', String(this.mes)); data.append('hoja', this.hoja); data.append('archivo', this.archivo);
+            data.append('anio', String(this.anio));
+            data.append('mes', String(this.mes));
+            data.append('archivo', this.archivo);
             this.previa.set(await this.api.post<Previa>('ddcp/cargas/validar', data, this.token()));
         });
     }
