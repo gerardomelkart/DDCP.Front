@@ -81,11 +81,34 @@ export class App {
             {
                 throw new Error('Seleccione el archivo Excel.');
             }
+            const archivo = this.archivo;
+            let contenido: ArrayBuffer;
+            try
+            {
+                contenido = await archivo.arrayBuffer();
+            }
+            catch
+            {
+                throw new Error('No se pudo leer el archivo Excel. Si está abierto, ciérrelo; después vuelva a seleccionarlo y pulse Validar.');
+            }
+            // Enviar una copia en memoria evita volver a leer el archivo durante la subida.
+            const copia = new Blob([contenido], { type: archivo.type });
             const data = new FormData();
             data.append('anio', String(this.anio));
             data.append('mes', String(this.mes));
-            data.append('archivo', this.archivo);
-            this.previa.set(await this.api.post<Previa>('ddcp/cargas/validar', data, this.token()));
+            data.append('archivo', copia, archivo.name);
+            try
+            {
+                this.previa.set(await this.api.post<Previa>('ddcp/cargas/validar', data, this.token()));
+            }
+            catch (error)
+            {
+                if (error instanceof HttpErrorResponse && error.status === 0)
+                {
+                    throw new Error('No se pudo enviar el archivo. Revise la conexión y, si el Excel está abierto, ciérrelo y vuelva a seleccionarlo antes de validar.');
+                }
+                throw error;
+            }
             this.mostrarVistaPrevia();
         });
     }
