@@ -10,7 +10,7 @@
     <main class="login-page">
         <div class="login-logo" role="img" aria-label="Gobierno de México · Seguridad · Secretariado Ejecutivo"></div>
         <section class="login-card">
-            <div class="login-title"><span class="login-system">DDCP</span><h1>Puesta de dispositivos<br>a disposición</h1><p>Inicio de sesión</p></div>
+            <div class="login-title"><span class="login-system">DDCP</span><h1>Dispositivos decomisados<br>centros penitenciarios</h1><p>Inicio de sesión</p></div>
             <form (ngSubmit)="entrar()" class="login-body">
                 <label for="login-usuario">Nombre de usuario</label><input id="login-usuario" name="usuario" [(ngModel)]="loginUsuario" required autocomplete="username" maxlength="80" placeholder="Captura tu usuario">
                 <label for="login-password">Contraseña</label><input id="login-password" name="password" type="password" [(ngModel)]="loginPassword" required autocomplete="current-password" placeholder="Captura tu contraseña">
@@ -21,7 +21,7 @@
         <span class="login-version">DDCP · Versión 0.2</span>
     </main>
 } @else {
-    <header class="topbar"><button class="menu-toggle" type="button" (click)="menuAbierto.set(!menuAbierto())" [attr.aria-expanded]="menuAbierto()" aria-controls="ddcp-navigation" aria-label="Abrir o cerrar menú"><svg class="icon"><use href="#i-menu" /></svg></button><div class="topbar-logo" role="img" aria-label="Gobierno de México · Seguridad · Secretariado Ejecutivo"></div><div class="topbar-system"><strong>DDCP</strong><span>Puesta de dispositivos a disposición</span></div></header>
+    <header class="topbar"><button class="menu-toggle" type="button" (click)="menuAbierto.set(!menuAbierto())" [attr.aria-expanded]="menuAbierto()" aria-controls="ddcp-navigation" aria-label="Abrir o cerrar menú"><svg class="icon"><use href="#i-menu" /></svg></button><div class="topbar-logo" role="img" aria-label="Gobierno de México · Seguridad · Secretariado Ejecutivo"></div><div class="topbar-system"><strong>DDCP</strong><span>Dispositivos decomisados centros penitenciarios</span></div></header>
     <div class="app-layout">
         @if (menuAbierto()) { <button class="menu-backdrop" aria-label="Cerrar menú" (click)="menuAbierto.set(false)"></button> }
         <aside id="ddcp-navigation" class="sidebar" [class.sidebar-open]="menuAbierto()">
@@ -65,7 +65,7 @@
             @if (pagina === 'carga') {
                 <div class="upload-steps" aria-label="Pasos de carga"><div [class.active]="!previa()"><span>1</span>Seleccionar archivo</div><div [class.active]="!!previa()"><span>2</span>Revisar información</div><div><span>3</span>Confirmar carga</div></div>
                 <div class="upload-layout">
-                    <section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-upload" /></svg>Reporte mensual</div><div class="panel-body"><div class="module-intro"><svg class="icon"><use href="#i-file" /></svg><div><strong>Dispositivos y personas puestas a disposición</strong><p>{{ sesion()!.usuario.esNacional ? 'Incluye todas las entidades habilitadas en el reporte del mes.' : 'Incluye únicamente la información de tu entidad.' }}</p></div></div>
+                    <section class="panel"><div class="panel-header"><svg class="icon"><use href="#i-upload" /></svg>Reporte mensual</div><div class="panel-body"><div class="module-intro"><svg class="icon"><use href="#i-file" /></svg><div><strong>Dispositivos decomisados centros penitenciarios</strong><p>{{ sesion()!.usuario.esNacional ? 'Incluye todas las entidades habilitadas en el reporte del mes.' : 'Incluye únicamente la información de tu entidad.' }}</p></div></div>
                         <form (ngSubmit)="validar()"><fieldset [disabled]="ocupado() || !!previa()"><div class="filters"><label>Año<input name="anio" type="number" [(ngModel)]="anio" min="2000" max="2100" required></label><label>Mes<select name="mes" [(ngModel)]="mes">@for (nombre of meses; track nombre; let i = $index) { <option [ngValue]="i + 1">{{ nombre }}</option> }</select></label></div>
                             <div class="dropzone" [class.file-ready]="!!archivo" [class.file-dragging]="arrastrando()" [class.file-locked]="ocupado() || !!previa()" (dragenter)="arrastrarArchivo($event)" (dragover)="arrastrarArchivo($event)" (dragleave)="salirArrastre($event)" (drop)="soltarArchivo($event)">
                                 <svg class="upload-icon icon"><use [attr.href]="archivo ? '#i-check' : '#i-upload'" /></svg><strong>{{ arrastrando() ? 'Suelta aquí tu archivo' : archivo ? archivo.name : 'Arrastra aquí tu archivo Excel' }}</strong><span>{{ archivo ? tamanoArchivo() + ' · Archivo seleccionado' : 'o selecciónalo desde tu equipo' }}</span>
@@ -161,7 +161,7 @@
                     </section>
                 }
             }
-            <footer class="page-footer">DDCP · Puesta de dispositivos a disposición</footer>
+            <footer class="page-footer">DDCP · Dispositivos decomisados centros penitenciarios</footer>
         </main>
     </div>
     @if (ocupado()) { <div class="processing-overlay" role="status" aria-live="polite"><div><span class="spinner"></span><strong>Procesando información…</strong><span>Espera un momento, por favor.</span></div></div> }
