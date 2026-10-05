@@ -26,6 +26,7 @@ export class App {
     consultaMes = 0;
     consultaEntidad = 0;
     archivo: File | null = null;
+    private consultaAplicada: { anio: number; mes: number; entidad: number } | null = null;
     nuevo = { usuario: '', nombre: '', password: '', rol: 'ENLACE_ESTATAL', esNacional: false, idEntidad: 0 };
     constructor(private api: Api, private injector: Injector) { if (this.sesion()) void this.inicializar(); }
     private recuperar(): Sesion | null {
@@ -160,19 +161,43 @@ export class App {
             this.descargar(blob, `DDCP_${this.anio}_${String(this.mes).padStart(2, '0')}.xlsx`);
         });
     }
-    async buscar() {
+    async buscar()
+    {
         await this.ejecutar(async () => {
-            let path = `ddcp/datos?anio=${this.consultaAnio}`;
-            if (this.consultaMes) path += `&mes=${this.consultaMes}`;
-            if (this.consultaEntidad) path += `&idEntidad=${this.consultaEntidad}`;
-            this.consulta.set(await this.api.get<Consulta>(path, this.token()));
+            const filtros = { anio: this.consultaAnio, mes: this.consultaMes, entidad: this.consultaEntidad };
+            const path = this.rutaConsulta('ddcp/datos', filtros);
+            const datos = await this.api.get<Consulta>(path, this.token());
+            this.consultaAplicada = filtros;
+            this.consulta.set(datos);
         });
     }
-    exportar() {
-        const datos = this.consulta(); if (!datos) return;
-        const filas = [['Año', 'Mes', 'Entidad', 'Dispositivos', 'Personas'], ...datos.filas.map(x => [x.anio, x.mes, x.nombreEntidad, x.dispositivos, x.personas])];
-        const csv = '\uFEFF' + filas.map(row => row.map(x => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\r\n');
-        this.descargar(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'DDCP_consulta.csv');
+    private rutaConsulta(path: string, filtros: { anio: number; mes: number; entidad: number })
+    {
+        const params = new URLSearchParams({ anio: String(filtros.anio) });
+        if (filtros.mes)
+        {
+            params.set('mes', String(filtros.mes));
+        }
+        if (filtros.entidad)
+        {
+            params.set('idEntidad', String(filtros.entidad));
+        }
+        return `${path}?${params}`;
+    }
+    async exportar()
+    {
+        await this.ejecutar(async () => {
+            const filtros = this.consultaAplicada;
+            if (!filtros || !this.consulta()?.filas.length)
+            {
+                return;
+            }
+            const blob = await this.api.blob(this.rutaConsulta('ddcp/datos/excel', filtros), this.token());
+            const periodo = filtros.mes ? `${filtros.anio}_${String(filtros.mes).padStart(2, '0')}` : String(filtros.anio);
+            const entidad = filtros.entidad || this.sesion()?.usuario.idEntidad;
+            const alcance = entidad ? `entidad_${entidad}` : 'nacional';
+            this.descargar(blob, `DDCP_${periodo}_${alcance}.xlsx`);
+        });
     }
     private descargar(blob: Blob, nombre: string) { const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = nombre; link.click(); URL.revokeObjectURL(url); }
     totalPreviaDispositivos() { return (this.previa()?.filas || []).reduce((sum, fila) => sum + BigInt(fila.dispositivos), 0n).toString(); }
