@@ -12,8 +12,8 @@ export interface Consulta { filas: Registro[]; totalDispositivos: string; totalP
 
 @Injectable({ providedIn: 'root' })
 export class Api {
-    // Desarrollo: proxy.conf.json. Publicación: cambiar por la ruta del proxy de la API.
-    private readonly base = '/api';
+    // La base del sitio resuelve /api en desarrollo y /ddcp/api en producción.
+    private readonly base = new URL('api/', document.baseURI).pathname.replace(/\/$/, '');
     constructor(private http: HttpClient) {}
     headers(token: string) { return new HttpHeaders({ Authorization: `Bearer ${token}` }); }
     login(usuario: string, password: string) { return firstValueFrom(this.http.post<Sesion>(`${this.base}/auth/login`, { usuario, password })); }
@@ -25,4 +25,5 @@ export class Api {
     }
     blob(path: string, token: string) { return firstValueFrom(this.http.get(`${this.base}/${path}`, { headers: this.headers(token), responseType: 'blob' })); }
 }
+
 
