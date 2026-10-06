@@ -38,13 +38,31 @@ export class App {
         if (!actual || Date.parse(actual.expira) <= Date.now()) { this.salir(); throw new Error('Su sesión terminó. Inicie sesión nuevamente.'); }
         return actual.token;
     }
+    private establecerError(mensaje: string)
+    {
+        this.error.set(mensaje);
+        if (!mensaje)
+        {
+            return;
+        }
+        afterNextRender(() => {
+            if (this.error() !== mensaje)
+            {
+                return;
+            }
+            const alerta = document.querySelector<HTMLElement>('.usuario-drawer [role="alert"], .estado-dialog [role="alert"]')
+                ?? document.querySelector<HTMLElement>('[role="alert"]');
+            const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            alerta?.scrollIntoView({ block: 'center', behavior: reducirMovimiento ? 'auto' : 'smooth' });
+        }, { injector: this.injector });
+    }
     private async ejecutar(action: () => Promise<void>) {
         if (this.ocupado()) return;
-        this.ocupado.set(true); this.error.set(''); this.mensaje.set('');
+        this.ocupado.set(true); this.establecerError(''); this.mensaje.set('');
         try { await action(); }
         catch (error) {
-            if (error instanceof HttpErrorResponse) { this.error.set(error.error?.mensaje || (error.status === 0 ? 'No fue posible conectar con el sistema. Intente nuevamente en unos momentos.' : 'No fue posible completar la operación.')); if (error.status === 401) this.salir(); }
-            else this.error.set(error instanceof Error ? error.message : 'Error de operación.');
+            if (error instanceof HttpErrorResponse) { this.establecerError(error.error?.mensaje || (error.status === 0 ? 'No fue posible conectar con el sistema. Intente nuevamente en unos momentos.' : 'No fue posible completar la operación.')); if (error.status === 401) this.salir(); }
+            else this.establecerError(error instanceof Error ? error.message : 'Error de operación.');
         }
         finally { this.ocupado.set(false); }
     }
@@ -61,17 +79,17 @@ export class App {
     seleccionarArchivo(event: Event) { const input = event.target as HTMLInputElement; if (input.files?.length) this.recibirArchivo(Array.from(input.files)); input.value = ''; }
     private recibirArchivo(files: File[]) {
         if (this.ocupado() || this.previa()) return;
-        this.error.set(''); this.mensaje.set('');
-        if (files.length !== 1) { this.error.set('Seleccione un solo archivo Excel para la carga.'); return; }
+        this.establecerError(''); this.mensaje.set('');
+        if (files.length !== 1) { this.establecerError('Seleccione un solo archivo Excel para la carga.'); return; }
         const file = files[0];
-        if (!file.name.toLowerCase().endsWith('.xlsx')) { this.error.set('El archivo debe tener formato .xlsx.'); return; }
-        if (!file.size || file.size > 10 * 1024 * 1024) { this.error.set('El archivo debe tener contenido y pesar como máximo 10 MB.'); return; }
+        if (!file.name.toLowerCase().endsWith('.xlsx')) { this.establecerError('El archivo debe tener formato .xlsx.'); return; }
+        if (!file.size || file.size > 10 * 1024 * 1024) { this.establecerError('El archivo debe tener contenido y pesar como máximo 10 MB.'); return; }
         this.archivo = file;
     }
     arrastrarArchivo(event: DragEvent) { event.preventDefault(); event.stopPropagation(); if (this.ocupado() || this.previa()) return; this.arrastrando.set(true); if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'; }
     salirArrastre(event: DragEvent) { event.preventDefault(); if (event.relatedTarget instanceof Node && (event.currentTarget as HTMLElement).contains(event.relatedTarget)) return; this.arrastrando.set(false); }
     soltarArchivo(event: DragEvent) { event.preventDefault(); event.stopPropagation(); this.arrastrando.set(false); this.recibirArchivo(Array.from(event.dataTransfer?.files || [])); }
-    quitarArchivo() { if (!this.ocupado() && !this.previa()) { this.archivo = null; this.error.set(''); } }
+    quitarArchivo() { if (!this.ocupado() && !this.previa()) { this.archivo = null; this.establecerError(''); } }
     tamanoArchivo() { return this.archivo ? (this.archivo.size / 1024 / 1024 < 1 ? `${Math.ceil(this.archivo.size / 1024)} KB` : `${(this.archivo.size / 1024 / 1024).toFixed(1)} MB`) : ''; }
     rolNombre(rol: string) { return rol === 'SUPER_USUARIO' ? 'Super usuario' : rol === 'ENLACE_ESTATAL' ? 'Enlace' : 'Consulta'; }
     nombreEntidad(id: number | null) { return this.entidades().find(x => x.idEntidad === id)?.nombreEntidad || 'Entidad asignada'; }
@@ -262,7 +280,7 @@ export class App {
         {
             return;
         }
-        this.error.set('');
+        this.establecerError('');
         this.mensaje.set('');
         this.usuarioEditar = usuario?.idUsuario ?? null;
         this.nuevo = usuario ? { usuario: usuario.usuario, nombre: usuario.nombre, password: '', rol: usuario.rol, esNacional: usuario.esNacional, idEntidad: usuario.idEntidad ?? 0 } : { usuario: '', nombre: '', password: '', rol: 'ENLACE_ESTATAL', esNacional: false, idEntidad: 0 };
@@ -350,7 +368,7 @@ export class App {
         {
             return;
         }
-        this.error.set('');
+        this.establecerError('');
         this.focoAnterior = document.activeElement as HTMLElement;
         this.estadoPendiente = usuario;
         setTimeout(() => document.querySelector<HTMLButtonElement>('.estado-dialog button')?.focus());
