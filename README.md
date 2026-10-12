@@ -2,19 +2,24 @@
 
 Interfaz Angular de **Dispositivos decomisados centros penitenciarios**.
 
-## Organización
+## Organización, siguiendo SIIID
 
-- `src/app/app.ts` y `app.html`: pantalla principal y coordinación de login, carga, consulta y usuarios.
-- `src/app/core/http`: transporte HTTP y resolución de la URL de la API.
-- `src/app/core/models`: sesión y usuario autenticado.
-- `src/app/features/ddcp/models`: contratos de entidades, vista previa, consulta y filtros.
-- `src/app/features/ddcp/utils`: construcción de los filtros de consulta y descarga.
-- `src/app/features/usuarios/utils`: búsqueda y ordenamiento de la tabla de usuarios.
-- `src/app/shared`: nombres de meses y descarga de archivos, compartidos por las pantallas.
+- `src/app/app.ts` y `app.html`: shell de la aplicación; muestran login o layout y el indicador de procesamiento.
+- `src/app/core/models`: contratos de sesión, usuarios, entidades, carga, consulta y filtros.
+- `src/app/core/services/api.service.ts`: transporte HTTP y resolución de la URL de la API.
+- `src/app/core/services/session.service.ts`: sesión compartida, alcance, navegación, mensajes y manejo de errores.
+- `src/app/core/services/auth.service.ts`: inicio de sesión.
+- `src/app/core/services/ddcp-consulta.service.ts`: estado de filtros, consulta y Excel.
+- `src/app/core/services/ddcp-carga.service.ts`: selección del archivo, validación, vista previa, confirmación y plantilla.
+- `src/app/core/services/usuarios.service.ts`: administración, búsqueda, ordenamiento y exportación de usuarios.
+- `src/app/core/constants` y `core/utils`: meses, filtros, tabla de usuarios y descarga de archivos.
+- `src/app/layout/main-layout`, `sidebar` y `topbar`: estructura y navegación de la interfaz.
+- `src/app/pages/login`, `consulta`, `carga` y `usuarios`: componentes y HTML separados de cada pantalla.
+- `src/app/shared/icons`: símbolos de iconos compartidos.
 - `src/assets`: imágenes e identidad institucional.
 - `publicacion`: publicación e instalación de API y Front en conjunto.
 
-El estado de los formularios se mantiene en el componente principal. Los modelos y las funciones independientes de Angular se separan para evitar mezclar transporte, filtros y presentación.
+Las pantallas comparten la sesión y el indicador de procesamiento. Sus servicios conservan el estado al cambiar de sección; al cerrar sesión se limpian archivos, vistas previas, resultados y datos de usuarios. La navegación conserva las URLs actuales de DDCP.
 
 ## Desarrollo y publicación
 

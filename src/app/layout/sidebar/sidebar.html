@@ -1,0 +1,22 @@
+<aside id="ddcp-navigation" class="sidebar" [class.sidebar-open]="vm.menuAbierto()">
+            <section class="account-card" aria-label="Cuenta actual">
+                <div class="account-identity">
+                    <span class="account-label">CUENTA ACTUAL</span>
+                    <strong class="account-name">{{ vm.sesion()!.usuario.nombre }}</strong>
+                    <span class="account-role">{{ vm.rolNombre(vm.sesion()!.usuario.rol) }}</span>
+                </div>
+                <div class="account-access">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg>
+                    <div>
+                        <span class="account-access-label">Ámbito de acceso</span>
+                        <strong>{{ vm.sesion()!.usuario.esNacional ? 'Nacional' : vm.nombreEntidad(vm.sesion()!.usuario.idEntidad) }}</strong>
+                    </div>
+                </div>
+            </section>
+            <p class="menu-heading">INFORMACIÓN</p>
+            <nav aria-label="Secciones"><button [class.active]="vm.pagina() === 'consulta'" [attr.aria-current]="vm.pagina() === 'consulta' ? 'page' : null" (click)="vm.ir('consulta')"><svg class="icon"><use href="#i-search" /></svg>Consulta de datos</button>
+                @if (vm.puedeCargar()) { <button [class.active]="vm.pagina() === 'carga'" [attr.aria-current]="vm.pagina() === 'carga' ? 'page' : null" (click)="vm.ir('carga')"><svg class="icon"><use href="#i-upload" /></svg>Carga mensual</button> }
+                @if (vm.sesion()!.usuario.rol === 'SUPER_USUARIO') { <button [class.active]="vm.pagina() === 'usuarios'" [attr.aria-current]="vm.pagina() === 'usuarios' ? 'page' : null" (click)="verUsuarios()" [disabled]="vm.ocupado()"><svg class="icon"><use href="#i-user" /></svg>Administración de usuarios</button> }
+            </nav>
+            <div class="sidebar-bottom"><span>DDCP · 0.2</span><button class="secondary" (click)="vm.salir()" [disabled]="vm.ocupado()">Cerrar sesión</button></div>
+        </aside>

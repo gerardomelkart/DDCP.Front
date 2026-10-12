@@ -1,4 +1,4 @@
-import { Usuario } from '../../../core/models/usuario.models';
+import { Usuario } from '../models/usuario.models';
 
 export function filtrarOrdenarUsuarios(usuarios: Usuario[], busqueda: string, filtroEstado: string, ordenUsuarios: string, ordenAscendente: boolean, rolNombre: (rol: string) => string, nombreEntidad: (id: number | null) => string)
 {

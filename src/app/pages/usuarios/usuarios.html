@@ -1,0 +1,79 @@
+
+                <div class="admin-page">
+                    <div class="admin-header">
+                        
+                        <button type="button" (click)="vm.abrirUsuario()" [disabled]="vm.ocupado()"><svg class="icon"><use href="#i-user" /></svg>Nuevo usuario</button>
+                    </div>
+                    <div class="admin-kpis">
+                        <div class="kpi-card"><div class="kpi-value">{{ vm.usuarios().length }}</div><div class="kpi-label">Usuarios registrados</div></div>
+                        <div class="kpi-card kpi-ok"><div class="kpi-value">{{ vm.usuariosActivos() }}</div><div class="kpi-label">Activos</div></div>
+                        <div class="kpi-card kpi-warn"><div class="kpi-value">{{ vm.usuarios().length - vm.usuariosActivos() }}</div><div class="kpi-label">Inactivos</div></div>
+                    </div>
+                    <section class="siiid-card usuarios-card">
+                        <div class="siiid-card-header usuarios-card-header">
+                            <strong>Usuarios de DDCP</strong>
+                            <div class="usuarios-tools">
+                                <button class="secondary" type="button" (click)="vm.exportarUsuarios()" [disabled]="vm.ocupado()">Excel</button>
+                                <label class="estado-filtro">Estado<select aria-label="Filtrar usuarios por estado" [(ngModel)]="vm.filtroEstado" (ngModelChange)="vm.paginaUsuarios = 1"><option value="activos">Activos</option><option value="inactivos">Inactivos</option><option value="todos">Ver todos</option></select></label>
+                                <div class="buscador"><svg class="icon"><use href="#i-search" /></svg><input type="search" aria-label="Buscar usuarios" placeholder="Buscar por nombre, usuario, rol o entidad…" [(ngModel)]="vm.busquedaUsuarios" (ngModelChange)="vm.paginaUsuarios = 1"></div>
+                            </div>
+                        </div>
+                        <div class="table-scroll">
+                            <table class="usuarios-table">
+                                <thead><tr>
+                                    <th><button class="sort-header" (click)="vm.ordenarUsuarios('nombre')">Nombre{{ vm.marcaOrden('nombre') }}</button></th>
+                                    <th><button class="sort-header" (click)="vm.ordenarUsuarios('usuario')">Usuario{{ vm.marcaOrden('usuario') }}</button></th>
+                                    <th><button class="sort-header" (click)="vm.ordenarUsuarios('rol')">Rol{{ vm.marcaOrden('rol') }}</button></th>
+                                    <th><button class="sort-header" (click)="vm.ordenarUsuarios('entidad')">Entidad / alcance{{ vm.marcaOrden('entidad') }}</button></th>
+                                    <th><button class="sort-header" (click)="vm.ordenarUsuarios('estado')">Estado{{ vm.marcaOrden('estado') }}</button></th>
+                                    <th>Acciones</th>
+                                </tr></thead>
+                                <tbody>
+                                    @for (u of vm.usuariosPaginados(); track u.idUsuario) {
+                                        <tr>
+                                            <td><div class="usuario-nombre">{{ u.nombre }}</div></td><td>{{ u.usuario }}</td>
+                                            <td><span class="rol-badge">{{ vm.rolNombre(u.rol) }}</span></td><td>{{ u.esNacional ? 'Nacional' : vm.nombreEntidad(u.idEntidad) }}</td>
+                                            <td><span class="estado-badge" [class.estado-activo]="u.habilitado !== false" [class.estado-inactivo]="u.habilitado === false">{{ u.habilitado !== false ? 'ACTIVO' : 'INACTIVO' }}</span></td>
+                                            <td><div class="acciones">
+                                                <button type="button" class="btn-icon btn-edit" [disabled]="vm.ocupado() || u.habilitado === false" [attr.aria-label]="'Editar ' + u.usuario" [title]="u.habilitado === false ? 'Reactive el usuario antes de editar' : 'Editar usuario'" (click)="vm.abrirUsuario(u)"><svg class="icon" viewBox="0 0 24 24"><path d="m15 5 4 4M4 20l4-1L20 7a3 3 0 0 0-4-4L4 15z" /></svg></button>
+                                                <button type="button" class="btn-icon btn-toggle" [disabled]="vm.ocupado() || u.idUsuario === vm.sesion()!.usuario.idUsuario" [attr.aria-label]="(u.habilitado === false ? 'Activar ' : 'Deshabilitar ') + u.usuario" [title]="u.idUsuario === vm.sesion()!.usuario.idUsuario ? 'No puede deshabilitar su propia cuenta' : u.habilitado === false ? 'Activar usuario' : 'Deshabilitar usuario'" (click)="vm.pedirEstado(u)"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="6" /><circle [attr.cx]="u.habilitado === false ? 8 : 16" cy="12" r="3" /></svg></button>
+                                            </div></td>
+                                        </tr>
+                                    } @empty {
+                                        <tr><td colspan="6" class="usuarios-mensaje">No se encontraron usuarios.</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination-row"><span>Mostrando {{ vm.usuariosPaginados().length }} de {{ vm.usuariosFiltrados().length }} usuarios</span><div class="pagination-actions"><button class="secondary" (click)="vm.paginaUsuarios = vm.paginaUsuarios - 1" [disabled]="vm.paginaUsuarios <= 1">Anterior</button><span>{{ vm.paginaUsuarios }} / {{ vm.totalPaginasUsuarios() }}</span><button class="secondary" (click)="vm.paginaUsuarios = vm.paginaUsuarios + 1" [disabled]="vm.paginaUsuarios >= vm.totalPaginasUsuarios()">Siguiente</button></div></div>
+                    </section>
+                </div>
+                @if (vm.modalUsuario) {
+                    <div class="drawer-backdrop" (click)="vm.cerrarUsuario()"></div>
+                    <aside class="usuario-drawer" role="dialog" aria-modal="true" aria-labelledby="titulo-usuario">
+                        <div class="drawer-header"><div><h2 id="titulo-usuario">{{ vm.usuarioEditar ? 'Editar usuario' : 'Nuevo usuario' }}</h2><p>Datos generales, rol y alcance de DDCP.</p></div><button type="button" class="drawer-close" aria-label="Cerrar formulario" (click)="vm.cerrarUsuario()" [disabled]="vm.ocupado()">×</button></div>
+                        <form class="drawer-form" (ngSubmit)="vm.guardarUsuario()">
+                            <div class="drawer-body">
+                                @if (vm.error()) { <div class="alert error" role="alert">{{ vm.error() }}</div> }
+                                <fieldset [disabled]="vm.ocupado()"><div class="form-grid">
+                                    <label class="span-2" for="usuario-nombre">Nombre completo <span class="required">*</span><input id="usuario-nombre" name="nombre" [(ngModel)]="vm.nuevo.nombre" required maxlength="160" autocomplete="name"></label>
+                                    <label>Usuario <span class="required">*</span><input name="usuario" [(ngModel)]="vm.nuevo.usuario" required maxlength="80" autocomplete="off"></label>
+                                    <label>Rol <span class="required">*</span><select name="rol" [(ngModel)]="vm.nuevo.rol" (ngModelChange)="vm.cambiarRol()" [disabled]="vm.usuarioEditar === vm.sesion()!.usuario.idUsuario"><option value="SUPER_USUARIO">Super usuario</option><option value="ENLACE_ESTATAL">Enlace</option><option value="CONSULTA">Consulta</option></select></label>
+                                    <label>Alcance <span class="required">*</span><select name="alcance" [(ngModel)]="vm.nuevo.esNacional" [disabled]="vm.nuevo.rol === 'SUPER_USUARIO'"><option [ngValue]="true">Nacional — todas las entidades</option><option [ngValue]="false">Por entidad</option></select></label>
+                                    <label>Entidad<select name="entidad" [(ngModel)]="vm.nuevo.idEntidad" [disabled]="vm.nuevo.esNacional" [required]="!vm.nuevo.esNacional"><option [ngValue]="0">Seleccionar entidad</option>@for (e of vm.entidades(); track e.idEntidad) { <option [ngValue]="e.idEntidad">{{ e.nombreEntidad }}</option> }</select></label>
+                                    <label class="span-2">{{ vm.usuarioEditar ? 'Nueva contraseña' : 'Contraseña inicial *' }}<input name="password" type="password" [(ngModel)]="vm.nuevo.password" [required]="!vm.usuarioEditar" minlength="8" autocomplete="new-password"><small>{{ vm.usuarioEditar ? 'Déjala vacía para conservar la contraseña actual.' : 'Al menos 8 caracteres.' }}</small></label>
+                                </div><div class="permisos-panel"><strong>Permisos de DDCP</strong><p>{{ vm.nuevo.rol === 'CONSULTA' ? 'Consulta de información; sin carga de archivos.' : vm.nuevo.rol === 'SUPER_USUARIO' ? 'Administración de usuarios, carga y consulta nacional.' : 'Carga y consulta dentro del alcance asignado.' }}</p></div></fieldset>
+                            </div>
+                            <div class="drawer-actions"><button type="button" class="secondary" (click)="vm.cerrarUsuario()" [disabled]="vm.ocupado()">Cancelar</button><button type="submit" [disabled]="vm.ocupado() || !vm.formularioUsuarioValido()">Guardar usuario</button></div>
+                        </form>
+                    </aside>
+                }
+                @if (vm.estadoPendiente; as u) {
+                    <div class="drawer-backdrop" (click)="vm.cerrarUsuario()"></div>
+                    <section class="estado-dialog" role="dialog" aria-modal="true" aria-labelledby="titulo-estado">
+                        <h2 id="titulo-estado">{{ u.habilitado === false ? 'Activar usuario' : 'Deshabilitar usuario' }}</h2><p>¿Deseas {{ u.habilitado === false ? 'activar' : 'deshabilitar' }} la cuenta de <strong>{{ u.nombre }}</strong> ({{ u.usuario }})?</p>
+                        @if (u.habilitado !== false) { <p>La cuenta dejará de tener acceso al sistema.</p> }
+                        @if (vm.error()) { <div class="alert error" role="alert">{{ vm.error() }}</div> }
+                        <div class="actions"><button class="secondary" (click)="vm.cerrarUsuario()" [disabled]="vm.ocupado()">Cancelar</button><button (click)="vm.confirmarEstado()" [disabled]="vm.ocupado()">{{ u.habilitado === false ? 'Activar' : 'Deshabilitar' }}</button></div>
+                    </section>
+                }
