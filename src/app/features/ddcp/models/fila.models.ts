@@ -1,0 +1,1 @@
+export interface Fila { idEntidad: number; nombreEntidad: string; dispositivos: string; personas: number; dispositivosAntes: string | null; personasAntes: number | null; revisionAntes: number | null; habilitadoAntes: boolean | null; }

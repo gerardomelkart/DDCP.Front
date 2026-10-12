@@ -2,7 +2,17 @@ import { afterNextRender, Component, HostListener, Injector, signal } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Api, Consulta, Entidad, Previa, Sesion, Usuario } from './api';
+import { Api } from './core/http/api.service';
+import { Sesion } from './core/models/sesion.models';
+import { Usuario } from './core/models/usuario.models';
+import { Consulta } from './features/ddcp/models/consulta.models';
+import { Entidad } from './features/ddcp/models/entidad.models';
+import { Previa } from './features/ddcp/models/previa.models';
+import { FiltrosConsulta } from './features/ddcp/models/filtros-consulta.models';
+import { rutaConsulta } from './features/ddcp/utils/ruta-consulta';
+import { MESES } from './shared/constants/meses';
+import { descargarArchivo } from './shared/utils/descargar-archivo';
+import { filtrarOrdenarUsuarios } from './features/usuarios/utils/tabla-usuarios';
 
 @Component({ selector: 'app-root', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './app.html' })
 export class App {
@@ -16,7 +26,7 @@ export class App {
     readonly usuarios = signal<Usuario[]>([]);
     readonly arrastrando = signal(false);
     readonly menuAbierto = signal(false);
-    readonly meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    readonly meses = MESES;
     pagina: 'consulta' | 'carga' | 'usuarios' = 'consulta';
     loginUsuario = '';
     loginPassword = '';
@@ -26,7 +36,7 @@ export class App {
     consultaMes = 0;
     consultaEntidad = 0;
     archivo: File | null = null;
-    private consultaAplicada: { anio: number; mes: number; entidad: number } | null = null;
+    private consultaAplicada: FiltrosConsulta | null = null;
     nuevo = { usuario: '', nombre: '', password: '', rol: 'ENLACE_ESTATAL', esNacional: false, idEntidad: 0 };
     constructor(private api: Api, private injector: Injector) { if (this.sesion()) void this.inicializar(); }
     private recuperar(): Sesion | null {
@@ -176,31 +186,18 @@ export class App {
     async plantilla() {
         await this.ejecutar(async () => {
             const blob = await this.api.blob(`ddcp/plantilla?anio=${this.anio}&mes=${this.mes}`, this.token());
-            this.descargar(blob, `DDCP_${this.anio}_${String(this.mes).padStart(2, '0')}.xlsx`);
+            descargarArchivo(blob, `DDCP_${this.anio}_${String(this.mes).padStart(2, '0')}.xlsx`);
         });
     }
     async buscar()
     {
         await this.ejecutar(async () => {
             const filtros = { anio: this.consultaAnio, mes: this.consultaMes, entidad: this.consultaEntidad };
-            const path = this.rutaConsulta('ddcp/datos', filtros);
+            const path = rutaConsulta('ddcp/datos', filtros);
             const datos = await this.api.get<Consulta>(path, this.token());
             this.consultaAplicada = filtros;
             this.consulta.set(datos);
         });
-    }
-    private rutaConsulta(path: string, filtros: { anio: number; mes: number; entidad: number })
-    {
-        const params = new URLSearchParams({ anio: String(filtros.anio) });
-        if (filtros.mes)
-        {
-            params.set('mes', String(filtros.mes));
-        }
-        if (filtros.entidad)
-        {
-            params.set('idEntidad', String(filtros.entidad));
-        }
-        return `${path}?${params}`;
     }
     async exportar()
     {
@@ -210,14 +207,13 @@ export class App {
             {
                 return;
             }
-            const blob = await this.api.blob(this.rutaConsulta('ddcp/datos/excel', filtros), this.token());
+            const blob = await this.api.blob(rutaConsulta('ddcp/datos/excel', filtros), this.token());
             const periodo = filtros.mes ? `${filtros.anio}_${String(filtros.mes).padStart(2, '0')}` : String(filtros.anio);
             const entidad = filtros.entidad || this.sesion()?.usuario.idEntidad;
             const alcance = entidad ? `entidad_${entidad}` : 'nacional';
-            this.descargar(blob, `DDCP_${periodo}_${alcance}.xlsx`);
+            descargarArchivo(blob, `DDCP_${periodo}_${alcance}.xlsx`);
         });
     }
-    private descargar(blob: Blob, nombre: string) { const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = nombre; link.click(); URL.revokeObjectURL(url); }
     totalPreviaDispositivos() { return (this.previa()?.filas || []).reduce((sum, fila) => sum + BigInt(fila.dispositivos), 0n).toString(); }
     totalPreviaPersonas() { return (this.previa()?.filas || []).reduce((sum, fila) => sum + fila.personas, 0); }
     async verUsuarios() { this.ir('usuarios'); await this.ejecutar(async () => this.usuarios.set(await this.api.get<Usuario[]>('usuarios', this.token()))); }
@@ -236,24 +232,8 @@ export class App {
     }
     usuariosFiltrados()
     {
-        const texto = this.busquedaUsuarios.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-        const lista = this.usuarios().filter(u => {
-            const estado = u.habilitado !== false;
-            const valor = `${u.nombre} ${u.usuario} ${this.rolNombre(u.rol)} ${u.esNacional ? 'Nacional' : this.nombreEntidad(u.idEntidad)}`;
-            const coincide = valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(texto);
-            return coincide && (this.filtroEstado === 'todos' || (this.filtroEstado === 'activos' ? estado : !estado));
-        });
-        const valorOrden = (u: Usuario) => {
-            switch (this.ordenUsuarios)
-            {
-                case 'usuario': return u.usuario;
-                case 'rol': return this.rolNombre(u.rol);
-                case 'entidad': return u.esNacional ? 'Nacional' : this.nombreEntidad(u.idEntidad);
-                case 'estado': return u.habilitado !== false ? 'Activo' : 'Inactivo';
-                default: return u.nombre;
-            }
-        };
-        return lista.sort((a, b) => valorOrden(a).localeCompare(valorOrden(b), 'es', { sensitivity: 'base' }) * (this.ordenAscendente ? 1 : -1));
+        return filtrarOrdenarUsuarios(this.usuarios(), this.busquedaUsuarios, this.filtroEstado, this.ordenUsuarios, this.ordenAscendente,
+            rol => this.rolNombre(rol), id => this.nombreEntidad(id));
     }
     totalPaginasUsuarios()
     {
@@ -394,7 +374,7 @@ export class App {
     {
         await this.ejecutar(async () => {
             const blob = await this.api.blob('usuarios/exportar', this.token());
-            this.descargar(blob, 'DDCP_usuarios.xlsx');
+            descargarArchivo(blob, 'DDCP_usuarios.xlsx');
         });
     }
 }

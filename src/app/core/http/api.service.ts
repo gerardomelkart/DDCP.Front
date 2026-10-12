@@ -1,14 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { Sesion } from '../models/sesion.models';
 
-export interface Usuario { idUsuario: number; usuario: string; nombre: string; rol: string; esNacional: boolean; idEntidad: number | null; habilitado?: boolean; }
-export interface Sesion { token: string; expira: string; usuario: Usuario; }
-export interface Entidad { idEntidad: number; nombreEntidad: string; nombreCorto: string | null; }
-export interface Fila { idEntidad: number; nombreEntidad: string; dispositivos: string; personas: number; dispositivosAntes: string | null; personasAntes: number | null; revisionAntes: number | null; habilitadoAntes: boolean | null; }
-export interface Previa { idCarga: string; anio: number; mes: number; filas: Fila[]; advertencias: string[]; }
-export interface Registro { idEntidad: number; nombreEntidad: string; anio: number; mes: number; dispositivos: string; personas: number; revision: number; }
-export interface Consulta { filas: Registro[]; totalDispositivos: string; totalPersonas: number; }
 
 @Injectable({ providedIn: 'root' })
 export class Api {
@@ -25,5 +19,3 @@ export class Api {
     }
     blob(path: string, token: string) { return firstValueFrom(this.http.get(`${this.base}/${path}`, { headers: this.headers(token), responseType: 'blob' })); }
 }
-
-
