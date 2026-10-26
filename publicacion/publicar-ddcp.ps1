@@ -5,7 +5,7 @@ if (!(Test-Path $Configuracion)) { throw "Copie publicar-ddcp.example.json a pub
 $perfil = Get-Content $Configuracion -Raw | ConvertFrom-Json
 $Proyecto = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $Salida = if ([System.IO.Path]::IsPathRooted($perfil.Salida)) { $perfil.Salida } else { [System.IO.Path]::GetFullPath((Join-Path (Split-Path $Configuracion -Parent) $perfil.Salida)) }
-if (!$perfil.BaseHref -or !$perfil.Runtime) { throw "Faltan BaseHref o Runtime en la configuración de publicación." }
+if (!$perfil.BaseHref -or !$perfil.Runtime) { throw "Faltan BaseHref o Runtime en la configuraciÃƒÂ³n de publicaciÃƒÂ³n." }
 
 $front = Join-Path $Proyecto "DDCP.Front"
 $csproj = Join-Path $Proyecto "IngestaDeDatos.Api\IngestaDeDatos.Api\IngestaDeDatos.Api.csproj"
@@ -23,7 +23,7 @@ if (!$apiTexto.Contains("document.baseURI"))
 }
 
 New-Item -ItemType Directory -Path $Salida -Force | Out-Null
-# Estos dos directorios contienen exclusivamente la salida de publicación.
+# Estos dos directorios contienen exclusivamente la salida de publicaciÃƒÂ³n.
 foreach ($directorio in @($apiSalida, $frontSalida))
 {
     if (Test-Path $directorio)
@@ -36,17 +36,27 @@ foreach ($directorio in @($apiSalida, $frontSalida))
 dotnet publish $csproj -c Release -r $perfil.Runtime --self-contained true -p:UseAppHost=true -p:PublishSingleFile=false -p:PublishTrimmed=false -o $apiSalida
 if ($LASTEXITCODE -ne 0)
 {
-    throw "Falló la publicación de la API."
+    throw "FallÃƒÂ³ la publicaciÃƒÂ³n de la API."
 }
 
-# La configuración y credenciales productivas quedan exclusivamente en el servidor.
+# La configuraciÃƒÂ³n y credenciales productivas quedan exclusivamente en el servidor.
 Get-ChildItem $apiSalida -Filter "appsettings*.json" | Remove-Item -Force
-# Publicar la configuración de reglas del proyecto, sin conexiones ni secretos.
-$configuracion = Get-Content (Join-Path (Split-Path $csproj -Parent) "appsettings.json") -Raw | ConvertFrom-Json
-$configuracion.ConnectionStrings = @{}
-$configuracion.Jwt.SecretKey = ""
+# Publicar la configuraciÃƒÂ³n de reglas del proyecto, sin conexiones ni secretos.
+$ajustesApi = Get-Content (Join-Path (Split-Path $csproj -Parent) "appsettings.json") -Raw | ConvertFrom-Json
+
+if ($null -eq $ajustesApi) {
+    throw "appsettings.json está vacío."
+}
+
+# Excluir conexiones y la clave JWT del paquete.
+$ajustesApi.PSObject.Properties.Remove("ConnectionStrings")
+
+if ($null -ne $ajustesApi.Jwt) {
+    $ajustesApi.Jwt.PSObject.Properties.Remove("SecretKey")
+}
+
 $utf8 = New-Object System.Text.UTF8Encoding($false)
-[System.IO.File]::WriteAllText((Join-Path $apiSalida "appsettings.json"), ($configuracion | ConvertTo-Json -Depth 12), $utf8)
+[System.IO.File]::WriteAllText((Join-Path $apiSalida "appsettings.json"), ($ajustesApi | ConvertTo-Json -Depth 12), $utf8)
 
 Push-Location $front
 try
@@ -54,12 +64,12 @@ try
     npm run build -- --configuration production --base-href $perfil.BaseHref
     if ($LASTEXITCODE -ne 0)
     {
-        throw "Falló la compilación del Front."
+        throw "FallÃƒÂ³ la compilaciÃƒÂ³n del Front."
     }
     $browser = Join-Path $front "dist\DDCP.Front\browser"
     if (!(Test-Path (Join-Path $browser "index.html")))
     {
-        throw "No se encontró dist/DDCP.Front/browser/index.html."
+        throw "No se encontrÃƒÂ³ dist/DDCP.Front/browser/index.html."
     }
     Copy-Item (Join-Path $browser "*") $frontSalida -Recurse -Force
 }
