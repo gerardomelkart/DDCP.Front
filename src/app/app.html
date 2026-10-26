@@ -1,10 +1,19 @@
 <app-icons />
-@if (session.sesion() && session.catalogos()) {
-    <app-main-layout />
+@if (session.sesion()) {
+    @if (session.catalogos()) {
+        <app-main-layout />
+    } @else {
+        <main class="session-loading" aria-busy="true">
+            <div role="status" aria-live="polite">
+                <span class="spinner" aria-hidden="true"></span>
+                <strong>Cargando tu sesión…</strong>
+                <p>Espera un momento, por favor.</p>
+            </div>
+        </main>
+    }
 } @else {
     <app-login />
 }
-@if (session.ocupado()) {
+@if (session.ocupado() && (!session.sesion() || session.catalogos())) {
     <div class="processing-overlay" role="status" aria-live="polite"><div><span class="spinner"></span><strong>Procesando información…</strong><span>Espera un momento, por favor.</span></div></div>
 }
-

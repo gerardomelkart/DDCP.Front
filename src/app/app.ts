@@ -4,5 +4,6 @@ import { MainLayout } from './layout/main-layout/main-layout';
 import { Login } from './pages/login/login';
 import { Icons } from './shared/icons/icons';
 
-@Component({ selector: 'app-root', standalone: true, imports: [MainLayout, Login, Icons], templateUrl: './app.html' })
+@Component({ selector: 'app-root', standalone: true, imports: [MainLayout, Login, Icons], templateUrl: './app.html', styleUrl: './app.css' })
 export class App { readonly session = inject(SessionService); }
+
