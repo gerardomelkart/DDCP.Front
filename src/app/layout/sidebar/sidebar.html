@@ -12,12 +12,13 @@
                         <strong>{{ vm.sesion()!.usuario.esNacional ? 'Nacional' : vm.nombreEntidad(vm.sesion()!.usuario.idEntidad) }}</strong>
                     </div>
                 </div>
+                <button class="account-home secondary" (click)="vm.ir('inicio')" [attr.aria-current]="vm.pagina() === 'inicio' ? 'page' : null"><svg class="icon"><use href="#i-home" /></svg>Regresar al inicio</button>
             </section>
             <p class="menu-heading">INFORMACIÓN</p>
             <nav aria-label="Secciones"><button [class.active]="vm.pagina() === 'consulta'" [attr.aria-current]="vm.pagina() === 'consulta' ? 'page' : null" (click)="vm.ir('consulta')"><svg class="icon"><use href="#i-search" /></svg>Consulta de datos</button>
                 @if (vm.puedeCargar()) { <button [class.active]="vm.pagina() === 'carga'" [attr.aria-current]="vm.pagina() === 'carga' ? 'page' : null" (click)="vm.ir('carga')"><svg class="icon"><use href="#i-upload" /></svg>Carga mensual</button> }
                 @if (vm.puedeAdministrarUsuarios()) { <button [class.active]="vm.pagina() === 'usuarios'" [attr.aria-current]="vm.pagina() === 'usuarios' ? 'page' : null" (click)="verUsuarios()" [disabled]="vm.ocupado()"><svg class="icon"><use href="#i-user" /></svg>Administración de usuarios</button> }
             </nav>
-            <div class="sidebar-bottom"><span>{{ vm.claveModulo() }} · 0.2</span><button class="secondary" (click)="vm.salir()" [disabled]="vm.ocupado()">Cerrar sesión</button></div>
+            <div class="sidebar-bottom"><span>{{ vm.claveModulo() }} · {{ version }}</span><button class="secondary" (click)="vm.salir()" [disabled]="vm.ocupado()">Cerrar sesión</button></div>
         </aside>
 

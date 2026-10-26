@@ -1,0 +1,26 @@
+<section class="welcome-card">
+    <div class="welcome-icon"><svg class="icon"><use href="#i-home" /></svg></div>
+    <div>
+        <span class="welcome-label">{{ vm.claveModulo() }}</span>
+        <h1>Bienvenido, {{ vm.sesion()!.usuario.nombre }}</h1>
+        <p>{{ vm.nombreModulo() }}</p>
+        <div class="welcome-meta"><span>{{ vm.rolNombre(vm.sesion()!.usuario.rol) }}</span><span>{{ vm.sesion()!.usuario.esNacional ? 'Ámbito nacional' : vm.nombreEntidad(vm.sesion()!.usuario.idEntidad) }}</span></div>
+    </div>
+</section>
+<section class="status-grid" aria-label="Permisos de la cuenta">
+    <div class="status-card"><strong>Disponible</strong><span>Consulta de información</span></div>
+    <div class="status-card" [class.status-muted]="!vm.puedeCargar()"><strong>{{ vm.puedeCargar() ? 'Habilitada' : 'Sin permiso' }}</strong><span>Carga mensual</span></div>
+    <div class="status-card" [class.status-muted]="!vm.puedeAdministrarUsuarios()"><strong>{{ vm.puedeAdministrarUsuarios() ? 'Habilitada' : 'Sin permiso' }}</strong><span>Administración de usuarios</span></div>
+</section>
+<section class="panel">
+    <div class="panel-header">Accesos disponibles</div>
+    <div class="quick-access-grid">
+        <button class="quick-link" (click)="vm.ir('consulta')"><span class="quick-icon"><svg class="icon"><use href="#i-search" /></svg></span><span><strong>Consulta de información</strong><small>Revisa periodos, filtra resultados y descarga el Excel.</small></span></button>
+        @if (vm.puedeCargar()) {
+            <button class="quick-link" (click)="vm.ir('carga')"><span class="quick-icon"><svg class="icon"><use href="#i-upload" /></svg></span><span><strong>Carga mensual</strong><small>Valida el archivo y confirma la información del periodo.</small></span></button>
+        }
+        @if (vm.puedeAdministrarUsuarios()) {
+            <button class="quick-link" (click)="verUsuarios()" [disabled]="vm.ocupado()"><span class="quick-icon"><svg class="icon"><use href="#i-user" /></svg></span><span><strong>Administración de usuarios</strong><small>Gestiona cuentas, roles y ámbitos de acceso.</small></span></button>
+        }
+    </div>
+</section>

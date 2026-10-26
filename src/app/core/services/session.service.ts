@@ -6,7 +6,7 @@ import { Entidad } from '../models/entidad.models';
 import { Consulta } from '../models/consulta.models';
 import { Catalogos } from '../models/catalogos.models';
 
-export type Pagina = 'consulta' | 'carga' | 'usuarios';
+export type Pagina = 'inicio' | 'consulta' | 'carga' | 'usuarios';
 
 @Injectable({ providedIn: 'root' })
 export class SessionService
@@ -91,7 +91,7 @@ export class SessionService
     puedeAdministrarUsuarios() { return this.sesion()?.usuario.puedeAdministrarUsuarios === true; }
     rolNombre(rol: string) { return this.roles.find(x => x.clave === rol)?.nombre ?? rol; }
     nombreEntidad(id: number | null) { return this.entidades().find(x => x.idEntidad === id)?.nombreEntidad || 'Entidad asignada'; }
-    readonly pagina = signal<Pagina>('consulta');
+    readonly pagina = signal<Pagina>('inicio');
     private readonly limpieza: Array<() => void> = [];
 
     constructor(private api: Api, private injector: Injector)
@@ -109,7 +109,7 @@ export class SessionService
         this.sesion.set(null);
         this.entidades.set([]);
         this.catalogos.set(null);
-        this.pagina.set('consulta');
+        this.pagina.set('inicio');
         this.menuAbierto.set(false);
         for (const limpiar of this.limpieza) limpiar();
     }

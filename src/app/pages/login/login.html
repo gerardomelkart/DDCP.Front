@@ -10,6 +10,6 @@
                 <button class="btn-login" type="submit" [disabled]="vm.ocupado()">{{ vm.ocupado() ? 'Ingresando…' : 'Iniciar sesión' }} <span aria-hidden="true">→</span></button>
             </form>
         </section>
-        <span class="login-version">{{ vm.claveModulo() }} · Versión 0.2</span>
+        <span class="login-version">{{ vm.claveModulo() }} · Versión {{ version }}</span>
     </main>
 

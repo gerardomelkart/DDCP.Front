@@ -717,3 +717,14 @@ body { font-family: Arial, Helvetica, sans-serif; font-size: 14px; }
     line-height: 1.4;
     overflow-wrap: anywhere;
 }
+
+
+.account-home { margin: 12px 16px 16px; align-self: stretch; font-size: 12px; }
+.filters.automatic-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.table-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px; color: var(--muted); font-size: 12px; }
+.table-tools button { min-height: 32px; padding: 6px 10px; font-size: 12px; }
+button.column-sort { background: transparent; border: 0; color: inherit; min-height: 30px; padding: 0; font-size: inherit; font-weight: 700; width: 100%; justify-content: space-between; box-shadow: none; }
+button.column-sort:hover:not(:disabled) { background: transparent; color: var(--guinda); box-shadow: none; }
+.column-filters th { padding-top: 0; }
+.column-filters input { margin: 0; min-width: 100px; height: 35px; font-size: 12px; font-weight: 400; }
+@media (max-width: 760px) { .filters.automatic-filters { grid-template-columns: 1fr; } .table-tools { align-items: flex-start; flex-direction: column; } }

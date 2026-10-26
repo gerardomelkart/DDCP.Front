@@ -66,3 +66,11 @@ Las próximas publicaciones usan el mismo comando y conservan la conexión produ
 - `publicacion`: scripts y perfiles de ejemplo, sin credenciales.
 
 Se conservan la descarga del Excel según la última consulta, los meses con nombre de BD, los totales y precisión de cantidades grandes, el aviso de archivo abierto, el scroll a errores/vista previa y la limpieza al confirmar o cerrar sesión.
+
+## Versión 1.0
+
+El inicio muestra bienvenida, permisos de la cuenta y accesos a las funciones disponibles, con el diseño de SIIID. La tarjeta de cuenta permite regresar al inicio. Los permisos y catálogos siguen viniendo de la API y la base.
+
+Consulta de información carga automáticamente al abrir la vista y al modificar año, mes o entidad. Los cambios rápidos se agrupan; las respuestas anteriores se descartan. Cada columna permite búsqueda parcial sin distinguir acentos y orden ascendente/descendente. Los meses se ordenan cronológicamente y los dispositivos conservan precisión de hasta 18 dígitos. Los totales reflejan las filas visibles.
+
+La descarga vuelve a consultar los datos autorizados y aplica los filtros de columnas y el orden actual. Puede reflejar actualizaciones confirmadas después de abrir la tabla. Esta versión requiere publicar también la API actualizada para exportar los filtros de columnas. No requiere cambios SQL.
