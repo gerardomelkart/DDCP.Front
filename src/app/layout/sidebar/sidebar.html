@@ -1,12 +1,6 @@
 <aside id="ddcp-navigation" class="sidebar" [class.sidebar-open]="vm.menuAbierto()">
     <div class="sidebar-content">
         <section class="profile" aria-label="Cuenta actual">
-            <div class="profile-heading">
-                <span class="profile-emblem" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg>
-                </span>
-                <span class="profile-caption">CUENTA ACTUAL</span>
-            </div>
             <strong class="profile-name">{{ vm.sesion()!.usuario.nombre }}</strong>
             <span class="profile-role">{{ vm.rolNombre(vm.sesion()!.usuario.rol) }}</span>
             <div class="profile-scope">
