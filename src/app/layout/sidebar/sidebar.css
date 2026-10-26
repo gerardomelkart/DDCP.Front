@@ -1,0 +1,244 @@
+:host
+{
+    display: contents;
+}
+.sidebar
+{
+    padding-top: 0;
+    background: #fff;
+    border-right: 1px solid #e6e1e3;
+    box-shadow: 3px 0 18px #35242b03;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.sidebar-content
+{
+    padding: 25px 16px 20px;
+}
+.profile
+{
+    padding: 0 8px 20px;
+    border-bottom: 1px solid #ece7e9;
+}
+.profile-heading
+{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.profile-emblem
+{
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #e9ddc9;
+    border-radius: 10px;
+    background: #fbf7f0;
+    color: #8c6a36;
+}
+.profile-emblem svg
+{
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.profile-caption
+{
+    color: #8a7c82;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .13em;
+}
+.profile-name
+{
+    display: block;
+    color: #32252d;
+    font-size: 17px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+.profile-role
+{
+    display: block;
+    margin-top: 5px;
+    color: var(--guinda);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+.profile-scope
+{
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 13px;
+    color: #7b7076;
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.scope-dot
+{
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--dorado);
+}
+.home-link
+{
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    margin-top: 18px;
+    padding: 10px 11px;
+    min-height: 39px;
+    border: 1px solid #ece4e7;
+    border-radius: 8px;
+    background: #fcfafb;
+    color: #6e4656;
+    font-size: 12px;
+    font-weight: 600;
+}
+.home-link .icon
+{
+    width: 17px;
+    height: 17px;
+}
+.home-arrow
+{
+    width: 13px;
+    height: 13px;
+    margin-left: auto;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+}
+.home-link:hover:not(:disabled), .home-link.home-current
+{
+    background: #f4ebef;
+    color: var(--guinda);
+    border-color: #dfccd3;
+    box-shadow: none;
+}
+.navigation-label
+{
+    margin: 23px 12px 12px;
+    color: #9a8b93;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+}
+.sidebar .side-navigation
+{
+    display: grid;
+    gap: 7px;
+}
+.sidebar .side-navigation .nav-item
+{
+    width: 100%;
+    min-height: 52px;
+    justify-content: flex-start;
+    gap: 11px;
+    padding: 9px 11px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #685b64;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    line-height: 1.45;
+    box-shadow: none;
+    transition: background .15s, color .15s;
+}
+.nav-icon
+{
+    display: grid;
+    place-items: center;
+    width: 33px;
+    height: 33px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: #f5f1f3;
+    color: #8a6979;
+}
+.nav-icon .icon
+{
+    width: 18px;
+    height: 18px;
+}
+.sidebar .side-navigation .nav-item:hover:not(:disabled)
+{
+    background: #f7f2f4;
+    color: var(--guinda);
+    box-shadow: none;
+}
+.sidebar .side-navigation .nav-item.active
+{
+    border-color: var(--guinda);
+    background: var(--guinda);
+    color: #fff;
+    box-shadow: 0 4px 10px #691c3214;
+}
+.nav-item.active .nav-icon
+{
+    background: #ffffff17;
+    color: #ead3ac;
+}
+.side-footer
+{
+    margin-top: auto;
+    padding: 16px 24px 20px;
+    border-top: 1px solid #ece7e9;
+}
+.logout-link
+{
+    justify-content: flex-start;
+    padding: 9px 0;
+    min-height: 36px;
+    width: 100%;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #786570;
+    font-size: 12px;
+    font-weight: 500;
+}
+.logout-link .icon
+{
+    width: 17px;
+    height: 17px;
+}
+.logout-link:hover:not(:disabled)
+{
+    color: var(--guinda);
+    background: #fcf8fa;
+    box-shadow: none;
+}
+.side-version
+{
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 13px;
+    color: #a0959c;
+    font-size: 10px;
+}
+.side-version strong
+{
+    color: #88727e;
+    font-weight: 700;
+    letter-spacing: .08em;
+}
+@media (prefers-reduced-motion: reduce)
+{
+    .sidebar .side-navigation .nav-item { transition: none; }
+}

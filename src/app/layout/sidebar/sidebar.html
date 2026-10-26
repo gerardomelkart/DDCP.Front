@@ -1,24 +1,51 @@
 <aside id="ddcp-navigation" class="sidebar" [class.sidebar-open]="vm.menuAbierto()">
-            <section class="account-card" aria-label="Cuenta actual">
-                <div class="account-identity">
-                    <span class="account-label">CUENTA ACTUAL</span>
-                    <strong class="account-name">{{ vm.sesion()!.usuario.nombre }}</strong>
-                    <span class="account-role">{{ vm.rolNombre(vm.sesion()!.usuario.rol) }}</span>
-                </div>
-                <div class="account-access">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg>
-                    <div>
-                        <span class="account-access-label">Ámbito de acceso</span>
-                        <strong>{{ vm.sesion()!.usuario.esNacional ? 'Nacional' : vm.nombreEntidad(vm.sesion()!.usuario.idEntidad) }}</strong>
-                    </div>
-                </div>
-                <button class="account-home secondary" (click)="vm.ir('inicio')" [attr.aria-current]="vm.pagina() === 'inicio' ? 'page' : null"><svg class="icon"><use href="#i-home" /></svg>Regresar al inicio</button>
-            </section>
-            <p class="menu-heading">INFORMACIÓN</p>
-            <nav aria-label="Secciones"><button [class.active]="vm.pagina() === 'consulta'" [attr.aria-current]="vm.pagina() === 'consulta' ? 'page' : null" (click)="vm.ir('consulta')"><svg class="icon"><use href="#i-search" /></svg>Consulta de datos</button>
-                @if (vm.puedeCargar()) { <button [class.active]="vm.pagina() === 'carga'" [attr.aria-current]="vm.pagina() === 'carga' ? 'page' : null" (click)="vm.ir('carga')"><svg class="icon"><use href="#i-upload" /></svg>Carga mensual</button> }
-                @if (vm.puedeAdministrarUsuarios()) { <button [class.active]="vm.pagina() === 'usuarios'" [attr.aria-current]="vm.pagina() === 'usuarios' ? 'page' : null" (click)="verUsuarios()" [disabled]="vm.ocupado()"><svg class="icon"><use href="#i-user" /></svg>Administración de usuarios</button> }
-            </nav>
-            <div class="sidebar-bottom"><span>{{ vm.claveModulo() }} · {{ version }}</span><button class="secondary" (click)="vm.salir()" [disabled]="vm.ocupado()">Cerrar sesión</button></div>
-        </aside>
+    <div class="sidebar-content">
+        <section class="profile" aria-label="Cuenta actual">
+            <div class="profile-heading">
+                <span class="profile-emblem" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></svg>
+                </span>
+                <span class="profile-caption">CUENTA ACTUAL</span>
+            </div>
+            <strong class="profile-name">{{ vm.sesion()!.usuario.nombre }}</strong>
+            <span class="profile-role">{{ vm.rolNombre(vm.sesion()!.usuario.rol) }}</span>
+            <div class="profile-scope">
+                <span class="scope-dot" aria-hidden="true"></span>
+                <span>{{ vm.sesion()!.usuario.esNacional ? 'Ámbito nacional' : vm.nombreEntidad(vm.sesion()!.usuario.idEntidad) }}</span>
+            </div>
+            <button class="home-link" (click)="vm.ir('inicio')" [class.home-current]="vm.pagina() === 'inicio'" [attr.aria-current]="vm.pagina() === 'inicio' ? 'page' : null">
+                <svg class="icon"><use href="#i-home" /></svg>
+                <span>Regresar al inicio</span>
+                <svg class="home-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+        </section>
 
+        <p class="navigation-label">INFORMACIÓN</p>
+        <nav class="side-navigation" aria-label="Secciones">
+            <button class="nav-item" [class.active]="vm.pagina() === 'consulta'" [attr.aria-current]="vm.pagina() === 'consulta' ? 'page' : null" (click)="vm.ir('consulta')">
+                <span class="nav-icon"><svg class="icon"><use href="#i-search" /></svg></span>
+                <span>Consulta de datos</span>
+            </button>
+            @if (vm.puedeCargar()) {
+                <button class="nav-item" [class.active]="vm.pagina() === 'carga'" [attr.aria-current]="vm.pagina() === 'carga' ? 'page' : null" (click)="vm.ir('carga')">
+                    <span class="nav-icon"><svg class="icon"><use href="#i-upload" /></svg></span>
+                    <span>Carga mensual</span>
+                </button>
+            }
+            @if (vm.puedeAdministrarUsuarios()) {
+                <button class="nav-item" [class.active]="vm.pagina() === 'usuarios'" [attr.aria-current]="vm.pagina() === 'usuarios' ? 'page' : null" (click)="verUsuarios()" [disabled]="vm.ocupado()">
+                    <span class="nav-icon"><svg class="icon"><use href="#i-user" /></svg></span>
+                    <span>Administración de usuarios</span>
+                </button>
+            }
+        </nav>
+    </div>
+
+    <div class="side-footer">
+        <button class="logout-link" (click)="vm.salir()" [disabled]="vm.ocupado()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v16h6m4-13 5 5-5 5M9 12h10"/></svg>
+            Cerrar sesión
+        </button>
+        <div class="side-version"><strong>{{ vm.claveModulo() }}</strong><span>Versión {{ version }}</span></div>
+    </div>
+</aside>

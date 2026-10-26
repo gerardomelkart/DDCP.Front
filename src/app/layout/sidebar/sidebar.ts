@@ -3,7 +3,7 @@ import { Component, inject } from '@angular/core';
 import { SessionService } from '../../core/services/session.service';
 import { UsuariosService } from '../../core/services/usuarios.service';
 
-@Component({ selector: 'app-sidebar', standalone: true, templateUrl: './sidebar.html', styles: [':host { display: contents; }'] })
+@Component({ selector: 'app-sidebar', standalone: true, templateUrl: './sidebar.html', styleUrl: './sidebar.css' })
 export class Sidebar
 {
     readonly vm = inject(SessionService);
