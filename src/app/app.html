@@ -1,5 +1,5 @@
 <app-icons />
-@if (session.sesion()) {
+@if (session.sesion() && session.catalogos()) {
     <app-main-layout />
 } @else {
     <app-login />
@@ -7,3 +7,4 @@
 @if (session.ocupado()) {
     <div class="processing-overlay" role="status" aria-live="polite"><div><span class="spinner"></span><strong>Procesando información…</strong><span>Espera un momento, por favor.</span></div></div>
 }
+

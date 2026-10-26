@@ -11,8 +11,10 @@ export class AuthService extends PantallaBase
         await this.ejecutar(async () => {
             const sesion = await this.api.login(this.loginUsuario, this.loginPassword);
             this.loginPassword = ''; this.sesion.set(sesion); sessionStorage.setItem('ddcp.sesion', JSON.stringify(sesion));
-            this.entidades.set(await this.api.get<Entidad[]>('ddcp/entidades', this.token()));
+            try { await this.session.cargarCatalogos(); }
+            catch (error) { this.session.salir(); throw error; }
         });
     }
 
 }
+

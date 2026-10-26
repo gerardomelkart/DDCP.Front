@@ -11,6 +11,7 @@ export class Api {
     constructor(private http: HttpClient) {}
     headers(token: string) { return new HttpHeaders({ Authorization: `Bearer ${token}` }); }
     login(usuario: string, password: string) { return firstValueFrom(this.http.post<Sesion>(`${this.base}/auth/login`, { usuario, password })); }
+    publico<T>(path: string) { return firstValueFrom(this.http.get<T>(`${this.base}/${path}`)); }
     get<T>(path: string, token: string) { return firstValueFrom(this.http.get<T>(`${this.base}/${path}`, { headers: this.headers(token) })); }
     post<T>(path: string, body: unknown, token: string) { return firstValueFrom(this.http.post<T>(`${this.base}/${path}`, body, { headers: this.headers(token) })); }
     put<T>(path: string, body: unknown, token: string)
@@ -19,3 +20,4 @@ export class Api {
     }
     blob(path: string, token: string) { return firstValueFrom(this.http.get(`${this.base}/${path}`, { headers: this.headers(token), responseType: 'blob' })); }
 }
+

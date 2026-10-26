@@ -16,7 +16,8 @@
             <p class="menu-heading">INFORMACIÓN</p>
             <nav aria-label="Secciones"><button [class.active]="vm.pagina() === 'consulta'" [attr.aria-current]="vm.pagina() === 'consulta' ? 'page' : null" (click)="vm.ir('consulta')"><svg class="icon"><use href="#i-search" /></svg>Consulta de datos</button>
                 @if (vm.puedeCargar()) { <button [class.active]="vm.pagina() === 'carga'" [attr.aria-current]="vm.pagina() === 'carga' ? 'page' : null" (click)="vm.ir('carga')"><svg class="icon"><use href="#i-upload" /></svg>Carga mensual</button> }
-                @if (vm.sesion()!.usuario.rol === 'SUPER_USUARIO') { <button [class.active]="vm.pagina() === 'usuarios'" [attr.aria-current]="vm.pagina() === 'usuarios' ? 'page' : null" (click)="verUsuarios()" [disabled]="vm.ocupado()"><svg class="icon"><use href="#i-user" /></svg>Administración de usuarios</button> }
+                @if (vm.puedeAdministrarUsuarios()) { <button [class.active]="vm.pagina() === 'usuarios'" [attr.aria-current]="vm.pagina() === 'usuarios' ? 'page' : null" (click)="verUsuarios()" [disabled]="vm.ocupado()"><svg class="icon"><use href="#i-user" /></svg>Administración de usuarios</button> }
             </nav>
-            <div class="sidebar-bottom"><span>DDCP · 0.2</span><button class="secondary" (click)="vm.salir()" [disabled]="vm.ocupado()">Cerrar sesión</button></div>
+            <div class="sidebar-bottom"><span>{{ vm.claveModulo() }} · 0.2</span><button class="secondary" (click)="vm.salir()" [disabled]="vm.ocupado()">Cerrar sesión</button></div>
         </aside>
+

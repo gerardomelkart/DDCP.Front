@@ -35,7 +35,7 @@ export class DdcpConsultaService extends PantallaBase
             const periodo = filtros.mes ? `${filtros.anio}_${String(filtros.mes).padStart(2, '0')}` : String(filtros.anio);
             const entidad = filtros.entidad || this.sesion()?.usuario.idEntidad;
             const alcance = entidad ? `entidad_${entidad}` : 'nacional';
-            descargarArchivo(blob, `DDCP_${periodo}_${alcance}.xlsx`);
+            descargarArchivo(blob, `${this.claveModulo()}_${periodo}_${alcance}.xlsx`);
         });
     }
     constructor()
@@ -44,3 +44,4 @@ export class DdcpConsultaService extends PantallaBase
         this.session.alSalir(() => this.consulta.set(null));
     }
 }
+

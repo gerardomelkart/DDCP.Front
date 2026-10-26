@@ -3,3 +3,11 @@ dist/
 .angular/
 out-tsc/
 *.log
+
+
+publicacion/*.local.json
+publicacion/*.env
+!publicacion/*.env.example
+.env
+
+proxy.local.json

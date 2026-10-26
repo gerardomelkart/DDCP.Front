@@ -2,13 +2,14 @@
     <main class="login-page">
         <div class="login-logo" role="img" aria-label="Gobierno de México · Seguridad · Secretariado Ejecutivo"></div>
         <section class="login-card">
-            <div class="login-title"><span class="login-system">DDCP</span><h1>Dispositivos decomisados<br>centros penitenciarios</h1><p>Inicio de sesión</p></div>
+            <div class="login-title"><span class="login-system">{{ vm.claveModulo() }}</span><h1>{{ vm.nombreModulo() }}</h1><p>Inicio de sesión</p></div>
             <form (ngSubmit)="vm.entrar()" class="login-body">
-                <label for="login-usuario">Nombre de usuario</label><input id="login-usuario" name="usuario" [(ngModel)]="vm.loginUsuario" required autocomplete="username" maxlength="80" placeholder="Captura tu usuario">
+                <label for="login-usuario">Nombre de usuario</label><input id="login-usuario" name="usuario" [(ngModel)]="vm.loginUsuario" required autocomplete="username" placeholder="Captura tu usuario">
                 <label for="login-password">Contraseña</label><input id="login-password" name="password" type="password" [(ngModel)]="vm.loginPassword" required autocomplete="current-password" placeholder="Captura tu contraseña">
                 @if (vm.error()) { <div class="login-error" role="alert">{{ vm.error() }}</div> }
                 <button class="btn-login" type="submit" [disabled]="vm.ocupado()">{{ vm.ocupado() ? 'Ingresando…' : 'Iniciar sesión' }} <span aria-hidden="true">→</span></button>
             </form>
         </section>
-        <span class="login-version">DDCP · Versión 0.2</span>
+        <span class="login-version">{{ vm.claveModulo() }} · Versión 0.2</span>
     </main>
+

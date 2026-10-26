@@ -13,7 +13,11 @@ export abstract class PantallaBase
     readonly mensaje = this.session.mensaje;
     readonly error = this.session.error;
     readonly entidades = this.session.entidades;
-    readonly meses = this.session.meses;
+    get meses() { return this.session.meses; }
+    get roles() { return this.session.roles; }
+    get reglas() { return this.session.reglas; }
+    nombreModulo() { return this.session.nombreModulo(); }
+    claveModulo() { return this.session.claveModulo(); }
     get pagina() { return this.session.pagina(); }
     protected token() { return this.session.token(); }
     protected ejecutar(action: () => Promise<void>) { return this.session.ejecutar(action); }
@@ -22,3 +26,4 @@ export abstract class PantallaBase
     nombreEntidad(id: number | null) { return this.session.nombreEntidad(id); }
     rolNombre(rol: string) { return this.session.rolNombre(rol); }
 }
+

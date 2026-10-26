@@ -4,7 +4,7 @@ import { Api } from './api.service';
 import { Sesion } from '../models/sesion.models';
 import { Entidad } from '../models/entidad.models';
 import { Consulta } from '../models/consulta.models';
-import { MESES } from '../constants/meses';
+import { Catalogos } from '../models/catalogos.models';
 
 export type Pagina = 'consulta' | 'carga' | 'usuarios';
 
@@ -17,7 +17,32 @@ export class SessionService
     readonly error = signal('');
     readonly entidades = signal<Entidad[]>([]);
     readonly menuAbierto = signal(false);
-    readonly meses = MESES;
+    readonly identidad = signal<{ modulo: string; nombreModulo: string; } | null>(null);
+    readonly catalogos = signal<Catalogos | null>(null);
+    get meses() { return this.catalogos()?.meses.map(x => x.nombre) ?? []; }
+    get roles() { return this.catalogos()?.roles ?? []; }
+    get reglas()
+    {
+        const catalogos = this.catalogos();
+        if (!catalogos) throw new Error('No se cargaron los catálogos y la configuración del sistema.');
+        return catalogos.reglas;
+    }
+    nombreModulo() { return this.catalogos()?.nombreModulo ?? this.identidad()?.nombreModulo ?? ''; }
+    claveModulo() { return this.catalogos()?.modulo ?? this.identidad()?.modulo ?? ''; }
+    async cargarCatalogos()
+    {
+        const token = this.token();
+        const catalogos = await this.api.get<Catalogos>('catalogos', token);
+        const entidades = await this.api.get<Entidad[]>('ddcp/entidades', token);
+        const actual = this.sesion();
+        if (!actual || this.token() !== token) return;
+        const sesion = { ...actual, usuario: { ...actual.usuario, ...catalogos.usuario } };
+        this.sesion.set(sesion);
+        sessionStorage.setItem('ddcp.sesion', JSON.stringify(sesion));
+        this.entidades.set(entidades);
+        this.catalogos.set(catalogos);
+        document.title = `${catalogos.modulo} · ${catalogos.nombreModulo}`;
+    }
     recuperar(): Sesion | null {
         try { const data = JSON.parse(sessionStorage.getItem('ddcp.sesion') || 'null') as Sesion | null; return data?.token && Date.parse(data.expira) > Date.now() ? data : null; }
         catch { return null; }
@@ -55,15 +80,26 @@ export class SessionService
         }
         finally { this.ocupado.set(false); }
     }
-    async inicializar() { await this.ejecutar(async () => this.entidades.set(await this.api.get<Entidad[]>('ddcp/entidades', this.token()))); }
-    puedeCargar() { return this.sesion()?.usuario.rol !== 'CONSULTA'; }
-    rolNombre(rol: string) { return rol === 'SUPER_USUARIO' ? 'Super usuario' : rol === 'ENLACE_ESTATAL' ? 'Enlace' : 'Consulta'; }
+    async inicializar()
+    {
+        await this.ejecutar(async () => {
+            try { await this.cargarCatalogos(); }
+            catch (error) { this.salir(); throw error; }
+        });
+    }
+    puedeCargar() { return this.sesion()?.usuario.puedeCargar === true; }
+    puedeAdministrarUsuarios() { return this.sesion()?.usuario.puedeAdministrarUsuarios === true; }
+    rolNombre(rol: string) { return this.roles.find(x => x.clave === rol)?.nombre ?? rol; }
     nombreEntidad(id: number | null) { return this.entidades().find(x => x.idEntidad === id)?.nombreEntidad || 'Entidad asignada'; }
     readonly pagina = signal<Pagina>('consulta');
     private readonly limpieza: Array<() => void> = [];
 
     constructor(private api: Api, private injector: Injector)
     {
+        void this.api.publico<{ modulo: string; nombreModulo: string; }>('sistema').then(x => {
+            this.identidad.set(x);
+            document.title = `${x.modulo} · ${x.nombreModulo}`;
+        }).catch(() => {});
         if (this.sesion()) void this.inicializar();
     }
     alSalir(limpiar: () => void) { this.limpieza.push(limpiar); }
@@ -72,6 +108,7 @@ export class SessionService
         sessionStorage.removeItem('ddcp.sesion');
         this.sesion.set(null);
         this.entidades.set([]);
+        this.catalogos.set(null);
         this.pagina.set('consulta');
         this.menuAbierto.set(false);
         for (const limpiar of this.limpieza) limpiar();
@@ -82,3 +119,4 @@ export class SessionService
         this.menuAbierto.set(false);
     }
 }
+

@@ -20,7 +20,7 @@ export class DdcpCargaService extends PantallaBase
         if (files.length !== 1) { this.establecerError('Seleccione un solo archivo Excel para la carga.'); return; }
         const file = files[0];
         if (!file.name.toLowerCase().endsWith('.xlsx')) { this.establecerError('El archivo debe tener formato .xlsx.'); return; }
-        if (!file.size || file.size > 10 * 1024 * 1024) { this.establecerError('El archivo debe tener contenido y pesar como máximo 10 MB.'); return; }
+        if (!file.size || file.size > this.reglas.maxArchivoBytes) { this.establecerError(`El archivo debe tener contenido y pesar como máximo ${this.reglas.maxArchivoBytes / 1024 / 1024} MB.`); return; }
         this.archivo = file;
     }
     arrastrarArchivo(event: DragEvent) { event.preventDefault(); event.stopPropagation(); if (this.ocupado() || this.previa()) return; this.arrastrando.set(true); if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'; }
@@ -110,7 +110,7 @@ export class DdcpCargaService extends PantallaBase
     async plantilla() {
         await this.ejecutar(async () => {
             const blob = await this.api.blob(`ddcp/plantilla?anio=${this.anio}&mes=${this.mes}`, this.token());
-            descargarArchivo(blob, `DDCP_${this.anio}_${String(this.mes).padStart(2, '0')}.xlsx`);
+            descargarArchivo(blob, `${this.claveModulo()}_${this.anio}_${String(this.mes).padStart(2, '0')}.xlsx`);
         });
     }
     totalPreviaDispositivos() { return (this.previa()?.filas || []).reduce((sum, fila) => sum + BigInt(fila.dispositivos), 0n).toString(); }
@@ -122,3 +122,4 @@ export class DdcpCargaService extends PantallaBase
         this.session.alSalir(() => { this.previa.set(null); this.archivo = null; this.arrastrando.set(false); });
     }
 }
+

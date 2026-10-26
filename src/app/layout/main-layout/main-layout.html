@@ -4,7 +4,7 @@
         @if (vm.menuAbierto()) { <button class="menu-backdrop" aria-label="Cerrar menú" (click)="vm.menuAbierto.set(false)"></button> }
         <app-sidebar />
         <main class="workspace">
-            <div class="page-heading"><div><span class="eyebrow">DDCP / {{ vm.pagina() === 'consulta' ? 'Consulta' : vm.pagina() === 'carga' ? 'Carga mensual' : 'Usuarios' }}</span><h1>{{ vm.pagina() === 'consulta' ? 'Consulta de información' : vm.pagina() === 'carga' ? 'Carga de información' : 'Administración de usuarios' }}</h1><p>{{ vm.pagina() === 'consulta' ? 'Revisa la información confirmada por periodo y entidad.' : vm.pagina() === 'carga' ? 'Envía el reporte mensual y revisa sus datos antes de confirmar.' : 'Gestiona cuentas, roles, estado y alcance de DDCP.' }}</p></div><span class="scope-badge">{{ vm.sesion()!.usuario.esNacional ? 'Cobertura nacional' : vm.nombreEntidad(vm.sesion()!.usuario.idEntidad) }}</span></div>
+            <div class="page-heading"><div><span class="eyebrow">{{ vm.claveModulo() }} / {{ vm.pagina() === 'consulta' ? 'Consulta' : vm.pagina() === 'carga' ? 'Carga mensual' : 'Usuarios' }}</span><h1>{{ vm.pagina() === 'consulta' ? 'Consulta de información' : vm.pagina() === 'carga' ? 'Carga de información' : 'Administración de usuarios' }}</h1><p>{{ vm.pagina() === 'consulta' ? 'Revisa la información confirmada por periodo y entidad.' : vm.pagina() === 'carga' ? 'Envía el reporte mensual y revisa sus datos antes de confirmar.' : 'Gestiona cuentas, roles, estado y alcance de DDCP.' }}</p></div><span class="scope-badge">{{ vm.sesion()!.usuario.esNacional ? 'Cobertura nacional' : vm.nombreEntidad(vm.sesion()!.usuario.idEntidad) }}</span></div>
             @if (vm.error()) { <div class="alert error" role="alert">{{ vm.error() }}</div> }
             @if (vm.mensaje()) { <div class="alert success" role="status">{{ vm.mensaje() }}</div> }
             @if (vm.pagina() === 'consulta') {
@@ -16,6 +16,7 @@
             @if (vm.pagina() === 'usuarios') {
                 <app-usuarios />
             }
-            <footer class="page-footer">DDCP · Dispositivos decomisados centros penitenciarios</footer>
+            <footer class="page-footer">{{ vm.claveModulo() }} · {{ vm.nombreModulo() }}</footer>
         </main>
     </div>
+

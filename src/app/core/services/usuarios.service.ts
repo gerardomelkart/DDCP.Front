@@ -8,7 +8,7 @@ import { PantallaBase } from './pantalla-base';
 export class UsuariosService extends PantallaBase
 {
     readonly usuarios = signal<Usuario[]>([]);
-    nuevo = { usuario: '', nombre: '', password: '', rol: 'ENLACE_ESTATAL', esNacional: false, idEntidad: 0 };
+    nuevo = { usuario: '', nombre: '', password: '', rol: '', esNacional: false, idEntidad: 0 };
     async verUsuarios() { this.ir('usuarios'); await this.ejecutar(async () => this.usuarios.set(await this.api.get<Usuario[]>('usuarios', this.token()))); }
     modalUsuario = false;
     usuarioEditar: number | null = null;
@@ -30,12 +30,12 @@ export class UsuariosService extends PantallaBase
     }
     totalPaginasUsuarios()
     {
-        return Math.max(1, Math.ceil(this.usuariosFiltrados().length / 10));
+        return Math.max(1, Math.ceil(this.usuariosFiltrados().length / this.reglas.filasPagina));
     }
     usuariosPaginados()
     {
         const pagina = Math.min(this.paginaUsuarios, this.totalPaginasUsuarios());
-        return this.usuariosFiltrados().slice((pagina - 1) * 10, pagina * 10);
+        return this.usuariosFiltrados().slice((pagina - 1) * this.reglas.filasPagina, pagina * this.reglas.filasPagina);
     }
     ordenarUsuarios(campo: string)
     {
@@ -56,7 +56,12 @@ export class UsuariosService extends PantallaBase
         this.establecerError('');
         this.mensaje.set('');
         this.usuarioEditar = usuario?.idUsuario ?? null;
-        this.nuevo = usuario ? { usuario: usuario.usuario, nombre: usuario.nombre, password: '', rol: usuario.rol, esNacional: usuario.esNacional, idEntidad: usuario.idEntidad ?? 0 } : { usuario: '', nombre: '', password: '', rol: 'ENLACE_ESTATAL', esNacional: false, idEntidad: 0 };
+        this.nuevo = usuario ? { usuario: usuario.usuario, nombre: usuario.nombre, password: '', rol: usuario.rol, esNacional: usuario.esNacional, idEntidad: usuario.idEntidad ?? 0 } : { usuario: '', nombre: '', password: '', rol: '', esNacional: false, idEntidad: 0 };
+        if (!usuario)
+        {
+            this.nuevo.rol = this.roles.find(x => x.predeterminado)?.clave ?? '';
+            this.cambiarRol();
+        }
         this.focoAnterior = document.activeElement as HTMLElement;
         this.modalUsuario = true;
         setTimeout(() => document.querySelector<HTMLInputElement>('#usuario-nombre')?.focus());
@@ -97,7 +102,7 @@ export class UsuariosService extends PantallaBase
     }
     formularioUsuarioValido()
     {
-        return !!this.nuevo.usuario.trim() && !!this.nuevo.nombre.trim() && (!!this.usuarioEditar || this.nuevo.password.length >= 8) && (!this.nuevo.password || this.nuevo.password.length >= 8) && (this.nuevo.esNacional || this.nuevo.idEntidad > 0);
+        return !!this.rolSeleccionado() && !!this.nuevo.usuario.trim() && !!this.nuevo.nombre.trim() && (!!this.usuarioEditar || this.nuevo.password.length >= this.reglas.passwordMinimo) && (!this.nuevo.password || this.nuevo.password.length >= this.reglas.passwordMinimo) && new TextEncoder().encode(this.nuevo.password).length <= this.reglas.passwordMaximoBytes && this.nuevo.usuario.trim().length <= this.reglas.usuarioMaximo && this.nuevo.nombre.trim().length <= this.reglas.nombreMaximo && (this.nuevo.esNacional || this.nuevo.idEntidad > 0);
     }
     async guardarUsuario()
     {
@@ -127,9 +132,16 @@ export class UsuariosService extends PantallaBase
             this.focoAnterior?.focus();
         });
     }
+    rolSeleccionado() { return this.roles.find(x => x.clave === this.nuevo.rol); }
+    descripcionPermisos()
+    {
+        const rol = this.rolSeleccionado();
+        if (!rol) return 'Seleccione un rol del catálogo.';
+        return [rol.puedeAdministrarUsuarios ? 'Administración de usuarios' : '', rol.puedeCargar ? 'Carga de archivos' : '', 'Consulta de información'].filter(Boolean).join(' · ');
+    }
     cambiarRol()
     {
-        if (this.nuevo.rol === 'SUPER_USUARIO')
+        if (this.rolSeleccionado()?.nacionalObligatorio)
         {
             this.nuevo.esNacional = true;
         }
@@ -166,7 +178,7 @@ export class UsuariosService extends PantallaBase
     {
         await this.ejecutar(async () => {
             const blob = await this.api.blob('usuarios/exportar', this.token());
-            descargarArchivo(blob, 'DDCP_usuarios.xlsx');
+            descargarArchivo(blob, `${this.claveModulo()}_usuarios.xlsx`);
         });
     }
     constructor()
@@ -175,3 +187,4 @@ export class UsuariosService extends PantallaBase
         this.session.alSalir(() => { this.usuarios.set([]); this.modalUsuario = false; this.estadoPendiente = null; this.nuevo.password = ''; });
     }
 }
+
