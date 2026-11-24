@@ -120,3 +120,11 @@ El inicio muestra bienvenida, permisos de la cuenta y accesos a las funciones di
 Consulta de información carga automáticamente al abrir la vista y al modificar año, mes o entidad. Los cambios rápidos se agrupan; las respuestas anteriores se descartan. Cada columna permite búsqueda parcial sin distinguir acentos y orden ascendente/descendente. Los meses se ordenan cronológicamente y los dispositivos conservan precisión de hasta 18 dígitos. Los totales reflejan las filas visibles.
 
 La descarga vuelve a consultar los datos autorizados y aplica los filtros de columnas y el orden actual. Puede reflejar actualizaciones confirmadas después de abrir la tabla. Esta versión requiere publicar también la API actualizada para exportar los filtros de columnas. No requiere cambios SQL.
+
+## Avisos de carga
+
+La validación correcta abre un modal con el periodo, las entidades y los totales. Ese aviso todavía no guarda información: al continuar se muestra la vista previa y se desplaza la pantalla al botón **Aceptar y confirmar carga**. Las advertencias se conservan para su revisión.
+
+Después de que la API confirma el guardado, se limpia el formulario y se abre **Carga correcta**, conservando el resumen del envío. Si el guardado falla, se mantiene la vista previa y no se muestra un aviso de éxito. Los diálogos admiten teclado, Escape y foco dentro del modal.
+
+Las pruebas del flujo se ejecutan desde este repositorio con `npm test`, después de `npm ci`.

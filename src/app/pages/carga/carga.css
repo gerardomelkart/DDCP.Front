@@ -1,0 +1,23 @@
+:host { display: contents; }
+.validation-notice { display: flex; align-items: center; gap: 14px; padding: 18px; margin-bottom: 18px; border: 1px solid #bad9c8; border-left: 5px solid #28714e; border-radius: 8px; background: #eff8f2; color: #20553d; }
+.validation-notice strong { font-size: 17px; line-height: 1.4; }
+.validation-notice p { margin: 5px 0 0; color: #426452; font-size: 13px; }
+.notice-icon { display: grid; place-items: center; width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; background: #d5ecdf; }
+.preview-actions { scroll-margin-top: 110px; }
+.upload-dialog { position: fixed; inset: 0; width: min(580px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); padding: 0; margin: auto; border: 1px solid #ded4d8; border-radius: 18px; background: #fff; color: #263038; box-shadow: 0 28px 90px #25121c40; overflow-y: auto; }
+.upload-dialog::backdrop { background: #24131d99; backdrop-filter: blur(3px); }
+.dialog-accent { height: 6px; background: #28714e; }
+.dialog-content { display: flex; flex-direction: column; align-items: center; padding: 30px; text-align: center; }
+.dialog-check { display: grid; place-items: center; width: 76px; height: 76px; margin-bottom: 18px; border: 8px solid #f1f8f3; border-radius: 50%; background: #dcefe3; color: #28714e; }
+.dialog-check svg { width: 35px; height: 35px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.dialog-step { color: #49745e; font-size: 10px; font-weight: 700; letter-spacing: .13em; }
+.upload-dialog h2 { margin-top: 10px; color: #244f39; font-size: 30px; }
+.upload-dialog p { margin: 12px 0 20px; max-width: 440px; }
+.dialog-period { display: flex; align-items: center; gap: 9px; color: var(--guinda); padding: 11px 18px; border-radius: 7px; background: #f8f2f4; }
+.dialog-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 10px; margin-top: 22px; padding: 18px 0; border-top: 1px solid #eee7ea; border-bottom: 1px solid #eee7ea; }
+.dialog-totals strong { display: block; font-size: 18px; line-height: 1.5; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.dialog-totals span { color: #7c7077; font-size: 12px; }
+.upload-dialog .dialog-warning { margin: 17px 0 0; padding: 11px 14px; border-radius: 6px; background: #fff7e9; color: #77551e; font-size: 12px; }
+.dialog-file { display: block; max-width: 100%; margin: 16px 0 22px; font-size: 12px; color: #82747d; overflow-wrap: anywhere; }
+.dialog-continue { width: 100%; min-height: 47px; justify-content: space-between; }
+@media (max-width: 560px) { .dialog-content { padding: 24px 18px; } .upload-dialog h2 { font-size: 26px; } .dialog-totals { grid-template-columns: 1fr; } .validation-notice { align-items: flex-start; } }

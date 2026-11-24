@@ -5,10 +5,23 @@ import { descargarArchivo } from '../utils/descargar-archivo';
 import { PantallaBase } from './pantalla-base';
 import { DdcpConsultaService } from './ddcp-consulta.service';
 
+interface AvisoCarga
+{
+    tipo: 'validada' | 'confirmada';
+    anio: number;
+    mes: number;
+    entidades: number;
+    dispositivos: string;
+    personas: number;
+    archivo: string;
+    advertencias: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DdcpCargaService extends PantallaBase
 {
     readonly previa = signal<Previa | null>(null);
+    readonly aviso = signal<AvisoCarga | null>(null);
     readonly arrastrando = signal(false);
     anio = new Date().getFullYear();
     mes = new Date().getMonth() + 1;
@@ -62,7 +75,7 @@ export class DdcpCargaService extends PantallaBase
                 }
                 throw error;
             }
-            this.mostrarVistaPrevia();
+            this.aviso.set(this.resumenCarga('validada'));
         });
     }
     private mostrarVistaPrevia()
@@ -73,7 +86,7 @@ export class DdcpCargaService extends PantallaBase
             {
                 return;
             }
-            const panel = document.querySelector<HTMLElement>('.preview');
+            const panel = document.querySelector<HTMLElement>('.preview-actions');
             if (!panel)
             {
                 return;
@@ -83,7 +96,23 @@ export class DdcpCargaService extends PantallaBase
             const top = Math.max(0, window.scrollY + panel.getBoundingClientRect().top - alturaEncabezado - 16);
             const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             window.scrollTo({ top, behavior: reducirMovimiento ? 'auto' : 'smooth' });
+            document.querySelector<HTMLButtonElement>('#confirmar-carga')?.focus({ preventScroll: true });
         }, { injector: this.injector });
+    }
+    private resumenCarga(tipo: AvisoCarga['tipo']): AvisoCarga
+    {
+        const previa = this.previa()!;
+        return {
+            tipo, anio: previa.anio, mes: previa.mes, entidades: previa.filas.length,
+            dispositivos: this.totalPreviaDispositivos(), personas: this.totalPreviaPersonas(),
+            archivo: this.archivo?.name ?? '', advertencias: previa.advertencias.length
+        };
+    }
+    cerrarAviso()
+    {
+        const aviso = this.aviso();
+        this.aviso.set(null);
+        if (aviso?.tipo === 'validada') this.mostrarVistaPrevia();
     }
     async confirmar()
     {
@@ -93,12 +122,14 @@ export class DdcpCargaService extends PantallaBase
             {
                 return;
             }
+            const resumen = this.resumenCarga('confirmada');
             const response = await this.api.post<{ mensaje: string }>(`ddcp/cargas/${previa.idCarga}/confirmar`, {}, this.token());
             this.archivo = null;
             this.arrastrando.set(false);
             this.previa.set(null);
             this.consultaService.consulta.set(null);
             this.mensaje.set(response.mensaje);
+            this.aviso.set(resumen);
         });
     }
     async cancelar() {
@@ -119,7 +150,7 @@ export class DdcpCargaService extends PantallaBase
     constructor()
     {
         super();
-        this.session.alSalir(() => { this.previa.set(null); this.archivo = null; this.arrastrando.set(false); });
+        this.session.alSalir(() => { this.aviso.set(null); this.previa.set(null); this.archivo = null; this.arrastrando.set(false); });
     }
 }
 
